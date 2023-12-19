@@ -1,7 +1,7 @@
 ---
 title: "Introduction to the `hicp`-package"
 author: "Sebastian Weinand"
-date: "`r format(Sys.Date(), '%d %B %Y')`"
+date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.Date(),'%d %B %Y')`"
 output: 
   rmarkdown::html_vignette:
     toc: true
@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+Sys.setenv(LANGUAGE="en")
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
