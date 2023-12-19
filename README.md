@@ -4,3 +4,5 @@ The methodology underlying the HICP is documented in the HICP Methodological Man
 Based on this manual, the hicp-package provides functions for data users to work with publicly available HICP price indices and weights (upper-level aggregation).
 It also provides easy access to HICP data from Eurostat's public database.
 Further details can be found in the package vignette. 
+
+The `hicp`-functions are designed for the use with R's data.table package.
