@@ -1,0 +1,17 @@
+Package: hicp
+Type: Package
+Title: Harmonised Index of Consumer Prices
+Version: 0.4.0
+Author: Sebastian Weinand
+Maintainer: Sebastian Weinand <sebastian.weinand@ec.europa.eu>
+Description: Functions to get HICP data from Eurostat's database, for index aggregation and the computation of change rates.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.5.0)
+Imports: restatapi (>= 0.21.0), data.table (>= 1.14.0)
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2023-11-03 12:24:24 UTC; weinase
