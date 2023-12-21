@@ -2,37 +2,36 @@
 
 \alias{countries}
 
-\title{EU and EFTA country metadata}
+\title{Country metadata}
 
 \author{Sebastian Weinand}
 
 \docType{data}
 
 \description{
-This dataset contains metadata on all (former) EU and EFTA countries that submit HICP data on a regular basis (e.g. number of index decimals used for dissemination).
+This dataset contains metadata for the euro area, EU, EFTA, and candidate countries that submit(ted) HICP data on a regular basis.
 }
 
 \format{
-Data for European Union (EU), euro area (EA) and the individual EU and EFTA countries (excluding Liechtenstein).
+A data.table with metadata on the individual euro area (EA), EU, EFTA, and candidate countries producing the HICP.
 \itemize{
   \item \code{code}: the country code
-  \item \code{name}: the country name
+  \item \code{name_[en|fr|de]}: the country name in English, French, and German
   \item \code{protocol_order}: the official protocol order of countries
-  \item \code{group}: a character distinguishing between country aggregates, EU countries and EFTA countries
-  \item \code{eu_entry} and \code{eu_exit}: date of joining or leaving the European Union
-  \item \code{euro_since}: the date of introduction of the euro as the official currency
-  \item \code{decimals}: the number of index decimals used for dissemination
+  \item \code{is_eu, is_ea, is_efta, is_candidate}: a logical indicating if a country belongs to the EU, the euro area, or if it's an EFTA or candidate country, respectively
+  \item \code{eu_since, eu_until}: date of joining and leaving the European Union
+  \item \code{ea_since}: the date of introduction of the euro as the official currency
+  \item \code{index_decimals}: the number of index decimals used for dissemination
 }
+
 }
 
 \usage{
+# country metadata:
 countries
 }
 
 \examples{
-# EU:
-countries[group=="eu",]
-
-# individual EA countries:
-countries[group=="eu" & !is.na(euro_since),]
+# subset to euro area countries:
+countries[is_ea==TRUE, ]
 }
