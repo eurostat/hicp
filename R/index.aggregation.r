@@ -2,7 +2,7 @@
 
 # Title:  Index number methods and aggregation
 # Author: Sebastian Weinand
-# Date:   22 September 2023
+# Date:   11 January 2024
 
 # bilateral index functions:
 laspey <- function(x, w0, wt=NULL){
@@ -225,6 +225,7 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   dt[, names(index) := x]
   dt[, "x":=NULL]
   setkey(x=dt, key="grp") # do not set the key before
+  if(nrow(dt)<=1L) return(NULL) # no aggregation possible
 
   # data for stepwise aggregation:
   dt.agg <- copy(dt)
