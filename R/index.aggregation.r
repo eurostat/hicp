@@ -2,15 +2,15 @@
 
 # Title:  Index number methods and aggregation
 # Author: Sebastian Weinand
-# Date:   11 January 2024
+# Date:   19 January 2024
 
 # bilateral index functions:
 laspey <- function(x, w0, wt=NULL){
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=w0, int=c(0,Inf))
-  .check.lengths(x=x, y=w0)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=w0, int=c(0,Inf))
+  check.lengths(x=x, y=w0)
 
   if(missing(w0) || all(is.na(w0) | is.na(x))){
 
@@ -40,9 +40,9 @@ laspey <- function(x, w0, wt=NULL){
 paasche <- function(x, w0=NULL, wt){
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=wt, int=c(0,Inf))
-  .check.lengths(x=x, y=wt)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=wt, int=c(0,Inf))
+  check.lengths(x=x, y=wt)
 
   if(missing(wt) || all(is.na(wt) | is.na(x))){
 
@@ -72,11 +72,11 @@ paasche <- function(x, w0=NULL, wt){
 fisher <- function(x, w0, wt){
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=w0, int=c(0,Inf))
-  .check.num(x=wt, int=c(0,Inf))
-  .check.lengths(x=x, y=w0)
-  .check.lengths(x=x, y=wt)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=w0, int=c(0,Inf))
+  check.num(x=wt, int=c(0,Inf))
+  check.lengths(x=x, y=w0)
+  check.lengths(x=x, y=wt)
 
   if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
 
@@ -97,11 +97,11 @@ fisher <- function(x, w0, wt){
 toernq <- function(x, w0, wt){
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=w0, int=c(0,Inf))
-  .check.num(x=wt, int=c(0,Inf))
-  .check.lengths(x=x, y=w0)
-  .check.lengths(x=x, y=wt)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=w0, int=c(0,Inf))
+  check.num(x=wt, int=c(0,Inf))
+  check.lengths(x=x, y=w0)
+  check.lengths(x=x, y=wt)
 
   if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
 
@@ -134,11 +134,11 @@ toernq <- function(x, w0, wt){
 walsh <- function(x, w0, wt){
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=w0, int=c(0,Inf))
-  .check.num(x=wt, int=c(0,Inf))
-  .check.lengths(x=x, y=w0)
-  .check.lengths(x=x, y=wt)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=w0, int=c(0,Inf))
+  check.num(x=wt, int=c(0,Inf))
+  check.lengths(x=x, y=w0)
+  check.lengths(x=x, y=wt)
 
   if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
 
@@ -189,23 +189,23 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   #               the base of all aggregation steps
 
   # input checks:
-  .check.num(x=x, int=c(0,Inf))
-  .check.num(x=w0, int=c(0,Inf), miss.ok=TRUE)
-  .check.num(x=wt, int=c(0,Inf), miss.ok=TRUE)
-  .check.char(x=grp)
-  .check.lengths(x=x, y=grp)
-  .check.log(x=keep.lowest, min.len=1, max.len=1, na.ok=FALSE)
+  check.num(x=x, int=c(0,Inf))
+  check.num(x=w0, int=c(0,Inf), miss.ok=TRUE)
+  check.num(x=wt, int=c(0,Inf), miss.ok=TRUE)
+  check.char(x=grp)
+  check.lengths(x=x, y=grp)
+  check.log(x=keep.lowest, min.len=1, max.len=1, na.ok=FALSE)
   if(!is.list(add)) stop("Non-valid input for add -> only lists allowed")
 
   # input checks on both "w0" and "wt:
   if(missing(w0) & missing(wt)){stop("Both vectors 'w0' and 'wt' are missing")}
   if(missing(w0)){w0.miss <- TRUE; w0 <- wt}else{w0.miss <- FALSE}
   if(missing(wt)){wt.miss <- TRUE; wt <- w0}else{wt.miss <- FALSE}
-  .check.lengths(x=x, y=w0)
-  .check.lengths(x=x, y=wt)
+  check.lengths(x=x, y=w0)
+  check.lengths(x=x, y=wt)
 
   # input checks on "index":
-  if(is.function(index)){index <- setNames(list(index), deparse(substitute(index)))}
+  if(is.function(index)){index <- stats::setNames(list(index), deparse(substitute(index)))}
   if(!is.list(index)){stop("Non-valid input for index -> must be a function or named list of functions")}
   if(any(names(index)=="")){stop("Non-valid input for index -> all list elements must have names")}
   if(!all(sapply(X=index, FUN=function(z) all(c("x","w0","wt")%in%names(formals(z)))))){
@@ -234,8 +234,8 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   # but not both. to allow aggregation, where the last
   # digit of a coicop id is dropped in each step,
   # replace bundle codes with their (first) component:
-  dt.agg <- dt.agg[hicp::keep.bundle(id=grp),]
-  grp.unbl <- hicp::unbundle(dt.agg$grp)
+  dt.agg <- dt.agg[keep.bundle(id=grp),]
+  grp.unbl <- unbundle(dt.agg$grp)
   dt.agg$grp <- grp.unbl[!duplicated(names(grp.unbl))]
 
   # bottom level to top:

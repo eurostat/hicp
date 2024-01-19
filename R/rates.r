@@ -2,16 +2,16 @@
 
 # Title:  Change rates and contributions
 # Author: Sebastian Weinand
-# Date:   2023-07-10
+# Date:   19 January 2024
 
 # compute change rates:
 rates <- function(x, t=NULL, type="monthly"){
 
   # input checks:
-  .check.num(x=x)
-  .check.date(x=t, null.ok=TRUE, na.ok=FALSE, chronological=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.char(x=type, min.len=1, max.len=1, na.ok=FALSE)
+  check.num(x=x)
+  check.date(x=t, null.ok=TRUE, na.ok=FALSE, chronological=FALSE)
+  check.lengths(x=x, y=t)
+  check.char(x=type, min.len=1, max.len=1, na.ok=FALSE)
 
   # match type:
   type <- match.arg(arg=type, choices=c("monthly","annual","annual-average"))
@@ -68,16 +68,16 @@ rates <- function(x, t=NULL, type="monthly"){
 contrib <- function(x, w, t, x.all, w.all, method="ribe"){
 
   # input checks:
-  .check.num(x=x)
-  .check.num(x=w)
-  .check.date(x=t, na.ok=FALSE)
-  .check.num(x=x.all)
-  .check.num(x=w.all)
-  .check.lengths(x=x, y=w)
-  .check.lengths(x=x, y=t)
-  .check.lengths(x=x, y=x.all)
-  .check.lengths(x=x, y=w.all)
-  .check.char(x=method, min.len=1, max.len=1, na.ok=FALSE)
+  check.num(x=x)
+  check.num(x=w)
+  check.date(x=t, na.ok=FALSE)
+  check.num(x=x.all)
+  check.num(x=w.all)
+  check.lengths(x=x, y=w)
+  check.lengths(x=x, y=t)
+  check.lengths(x=x, y=x.all)
+  check.lengths(x=x, y=w.all)
+  check.char(x=method, min.len=1, max.len=1, na.ok=FALSE)
 
   # match argument:
   method <- match.arg(arg=method, choices=c("ribe","kirchner"))

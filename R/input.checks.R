@@ -2,10 +2,10 @@
 
 # Title:  Input checks
 # Author: Sebastian Weinand
-# Date:   2023-07-10
+# Date:   19 January 2024
 
 # check character and factor inputs:
-.check.char <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE){
+check.char <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE){
 
   input <- deparse(substitute(x))
   msg_prefix <- paste("Non-valid input for", input, "->")
@@ -25,7 +25,7 @@
 }
 
 # check logical inputs:
-.check.log <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE){
+check.log <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE){
 
   input <- deparse(substitute(x))
   msg_prefix <- paste("Non-valid input for", input, "->")
@@ -46,7 +46,7 @@
 }
 
 # check numeric inputs:
-.check.num <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE, int=c(-Inf, Inf)){
+check.num <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE, int=c(-Inf, Inf)){
 
   input <- deparse(substitute(x))
   msg_prefix <- paste("Non-valid input for", input, "->")
@@ -67,7 +67,7 @@
 }
 
 # check dates:
-.check.date <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE, chronological=TRUE){
+check.date <- function(x, min.len=1, max.len=Inf, miss.ok=FALSE, null.ok=FALSE, na.ok=TRUE, chronological=TRUE){
 
   input <- deparse(substitute(x))
   msg_prefix <- paste("Non-valid input for", input, "->")
@@ -77,7 +77,7 @@
   if(missing(x) & miss.ok) return(invisible())
 
   if(!(null.ok && is.null(x))){
-    if(class(x)!="Date") stop(paste(msg_prefix, "only date vectors allowed"), call. = FALSE)
+    if(!inherits(x, what="Date")) stop(paste(msg_prefix, "only date vectors allowed"), call. = FALSE)
     if(one.len & length(x)!=max.len) stop(paste(msg_prefix, "must contain exactly one element"), call. = FALSE)
     if(length(x)<min.len) stop(paste(msg_prefix, "length must be greater or equal", min.len), call. = FALSE)
     if(length(x)>max.len) stop(paste(msg_prefix, "length must be smaller or equal", max.len), call. = FALSE)
@@ -88,7 +88,7 @@
 }
 
 # check identical length of input vectors:
-.check.lengths <- function(x, y){
+check.lengths <- function(x, y){
 
   input_x <- deparse(substitute(x))
   input_y <- deparse(substitute(y))

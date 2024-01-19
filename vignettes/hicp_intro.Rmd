@@ -39,7 +39,7 @@ Eurostat's database contains various datasets of different statistics. All datas
 dtd <- hicp.datasets()
 dtd[1:5, list(title, code, lastUpdate, values)]
 ```
-The output above shows the first five HICP datasets. As can be seen, a short description of each dataset and some meatdata are provided. The variable `code` is the dataset identifier, which is needed to filter and download data.
+The output above shows the first five HICP datasets. As can be seen, a short description of each dataset and some metadata are provided. The variable `code` is the dataset identifier, which is needed to filter and download data.
 
 ## Step 2: Allowed data filters
 
@@ -73,7 +73,7 @@ The object `dt` contains the item weights for the euro area since 2015. If one w
 
 # HICP and COICOP
 
-HICP item weights and price indices are classified according to COICOP. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, COICOP and thus also the HICP follows a pre-defined hierarical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
+HICP item weights and price indices are classified according to COICOP. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, COICOP and thus also the HICP follows a pre-defined hierarchical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
 
 ## COICOP codes, bundles, and relatives
 

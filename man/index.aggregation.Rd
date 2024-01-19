@@ -12,20 +12,30 @@
 \author{Sebastian Weinand}
 
 \description{
-Currently, the following index number methods are implemented: \code{laspey()} for the Laspeyres index, \code{paasche()} for the Paasche index, \code{toernq()} for the Toernqvist index, \code{fisher()} for the Fisher index, and \code{walsh()} for the Walsh index. Function \code{aggregate()} uses these functions (or other functions provided by the user) for step-wise aggregation of lower-level subindices into the overall index following the COICOP hierarchy.}
+Currently, the following index number methods are implemented:
+\itemize{
+  \item \code{laspey()} for the Laspeyres index;
+  \item \code{paasche()} for the Paasche index;
+  \item \code{toernq()} for the Toernqvist index;
+  \item \code{fisher()} for the Fisher index;
+  \item \code{walsh()} for the Walsh index.
+}
+Function \code{aggregate()} uses these functions (or other functions provided by the user) for step-wise aggregation of lower-level subindices into the overall index following the COICOP hierarchy.}
 
 \usage{
+# bilateral price indices:
 laspey(x, w0, wt=NULL)
 paasche(x, w0=NULL, wt)
 fisher(x, w0, wt)
 toernq(x, w0, wt)
 walsh(x, w0, wt)
 
+# step-wise index aggregation:
 aggregate(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE)
 }
 
 \arguments{
-  \item{x}{numeric vector of price relatives obtained by \code{unchain}ing some HICP index series.}
+  \item{x}{numeric vector of price relatives obtained by \code{unchain()}ing some HICP index series.}
   \item{w0, wt}{numeric vector of weights in the base period \code{w0} (e.g., for the Laspeyres index) or current period \code{wt} (e.g., for the Paasche index), respectively.}
   \item{grp}{grouping variable to be used. These should be valid COICOP codes or other hierarchical codes.}
   \item{index}{a function or named list of functions specifying the index formula used for aggregation. Each function must have arguments \code{x}, \code{w0} and \code{wt}, even if the attributes are not used (this can be indicated by setting this argument to \code{NULL}). Each function must return a scalar. Default is \code{index=laspey}.}
@@ -93,6 +103,8 @@ dt[, aggregate(x=price, w0=weight, grp=coicop,
 
 ### EXAMPLE 2: Index aggregation using published HICP data
 
+\dontrun{
+
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
 prc[, "time":=as.Date(paste0(time, "-01"))]
@@ -135,7 +147,7 @@ hicp.own <- merge(
             by="time",
             all.x=TRUE)
 plot(index-chain_laspey_15~time, data=hicp.own, type="l")
-hicp.own[abs(index-chain_laspey_15)>0.1,]
+head(hicp.own[abs(index-chain_laspey_15)>0.1,])
 
 # compute all-items HICP stepwise through all higher-levels:
 hicp.own.all <- hicp.data[, aggregate(x=dec_ratio, w0=weight, grp=coicop, index=laspey),
@@ -151,8 +163,8 @@ hicp.own.all <- merge(
                 by=c("time","grp"),
                 all.x=TRUE)
 hicp.own.all[, "diff" := index-chain_laspey_15]
-View(hicp.own.all[abs(diff)>0.1,])
-View(hicp.own.all[abs(w0-weight)>0.1,])
+head(hicp.own.all[abs(diff)>0.1,])
+head(hicp.own.all[abs(w0-weight)>0.1,])
 
 # compare all-items HICP from direct and step-wise aggregation:
 agg.comp <- merge(
@@ -161,5 +173,6 @@ agg.comp <- merge(
         by="time")
 
 # no differences -> consistent in aggregation:
-agg.comp[abs(index_stpwse-index_direct)>1e-4,]
+head(agg.comp[abs(index_stpwse-index_direct)>1e-4,])
+}
 }

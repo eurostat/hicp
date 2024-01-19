@@ -40,6 +40,8 @@ See Eurostat's public database at \url{https://ec.europa.eu/eurostat/web/main/da
 }
 
 \examples{
+\dontrun{
+
 # view available datasets:
 hicp.datasets()
 
@@ -48,4 +50,5 @@ hicp.datafilters(id="prc_hicp_inw")
 
 # download item weights for euro area from 2015 on:
 hicp.dataimport(id="prc_hicp_inw", filters=list("geo"="EA"), date.range=c("2015", NA))
+}
 }

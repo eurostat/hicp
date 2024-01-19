@@ -2,7 +2,7 @@
 
 # Title:    COICOP bundles
 # Author:   Sebastian Weinand
-# Date:     2023-07-10
+# Date:     19 January 2024
 
 # eurobase or matis bundle codes and their components:
 coicop.bundles <- list(
@@ -30,7 +30,7 @@ coicop.bundles <- list(
 is.bundle <- function(id){
 
   # input checks:
-  .check.char(x=id, min.len=0, max.len=Inf)
+  check.char(x=id, min.len=0, max.len=Inf)
 
   # output:
   id%in%names(coicop.bundles)
@@ -41,14 +41,14 @@ is.bundle <- function(id){
 unbundle <- function(id){
 
   # input checks:
-  .check.char(x=id)
+  check.char(x=id)
 
   # match id to dictionary:
   out <- coicop.bundles[match(x=id, table=names(coicop.bundles))]
   names(out) <- id
   idx <- sapply(X=out, FUN=is.null)
   out[idx] <- id[idx]
-  out <- setNames(unlist(x=out, use.names=FALSE), rep(id, lengths(out)))
+  out <- stats::setNames(unlist(x=out, use.names=FALSE), rep(id, lengths(out)))
   return(out)
 
   # m <- grepl(pattern="-", x=id)
@@ -64,11 +64,11 @@ keep.bundle <- function(id){
 
   # flag if the coicop bundle or its components should be kept,
   # if both are present. if all components are present, they
-  # are kept, while the bundle code is dropped. othwerise, the
+  # are kept, while the bundle code is dropped. otherwise, the
   # bundle code is kept, while its components are dropped.
 
   # input checks:
-  .check.char(x=id, min.len=0, max.len=Inf)
+  check.char(x=id, min.len=0, max.len=Inf)
 
   # define output:
   res <- rep(TRUE, length(id))

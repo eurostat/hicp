@@ -5,7 +5,7 @@ Version: 0.4.0
 Author: Sebastian Weinand
 Maintainer: Sebastian Weinand <sebastian.weinand@ec.europa.eu>
 Description: Functions to get HICP data from Eurostat's database, for index aggregation and the computation of change rates.
-License: What license is it under?
+License: EUPL
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 3.5.0)

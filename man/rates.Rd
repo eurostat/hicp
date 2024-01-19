@@ -51,6 +51,8 @@ rates(x=P, t=t, type="annual-average")
 
 ### EXAMPLE 2: Contributions using published HICP data
 
+\dontrun{
+
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
 prc[, "time":=as.Date(paste0(time, "-01"))]
@@ -71,12 +73,13 @@ hicp.data <- merge(x=hicp.data,
                    by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
 
 # ribe decomposition:
-hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, x.all=index_all, w.all=weight_all), by="coicop"]
+hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, 
+                              x.all=index_all, w.all=weight_all), by="coicop"]
 
 # annual change rates over time:
 plot(rates(x=index, t=time, type="annual")~time,
-      data=hicp.data[coicop=="CP00",],
-      type="l", ylim=c(-2,12))
+     data=hicp.data[coicop=="CP00",],
+     type="l", ylim=c(-2,12))
 
 # add contribution of energy:
 lines(ribe~time, data=hicp.data[coicop=="NRG"], col="red")
@@ -84,10 +87,10 @@ lines(ribe~time, data=hicp.data[coicop=="NRG"], col="red")
 # compare to published contributions:
 hicp.ctrb <- hicp.dataimport(id="prc_hicp_ctrb")
 hicp.ctrb[, "time":=as.Date(paste0(time, "-01"))]
-dt.comp <- merge(
-              x=hicp.ctrb,
-              y=hicp.data[, list(coicop, time, ribe)],
-              by=c("coicop","time"),
-              all=TRUE)
-dt.comp[!is.na(values) & abs(values-ribe)>0.1, ] # should be empty
+dt.comp <- merge(x=hicp.ctrb,
+                 y=hicp.data[, list(coicop, time, ribe)],
+                 by=c("coicop","time"),
+                 all=TRUE)
+head(dt.comp[!is.na(values) & abs(values-ribe)>0.1, ]) # should be empty
+}
 }

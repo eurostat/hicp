@@ -7,7 +7,7 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{tree()} derives the COICOP tree at the lowest possible level. In HICP data, this can be done seperately for each reporting month and country. Consequently, the COICOP tree can differ across space and time. If needed, specifying argument \code{by} in \code{tree()} allows to merge the COICOP trees at the lowest possible level, e.g. to obtain a unique composition of COICOP codes over time.
+Function \code{tree()} derives the COICOP tree at the lowest possible level. In HICP data, this can be done separately for each reporting month and country. Consequently, the COICOP tree can differ across space and time. If needed, specifying argument \code{by} in \code{tree()} allows to merge the COICOP trees at the lowest possible level, e.g. to obtain a unique composition of COICOP codes over time.
 }
 
 \usage{
@@ -34,7 +34,7 @@ A logical vector of the same length as \code{id}.
 \examples{
 require(data.table)
 
-# EXAMPLE 1
+### EXAMPLE 1
 
 # flag lowest possible level to be used as COICOP tree:
 tree(id=c("01","011","012"), w=NULL) # true
@@ -58,7 +58,9 @@ tree(id=c("08","081","082_083"), w=c(0.25,0.05,0.2), unbundle=FALSE)
 # merge (or fix) coicop tree over time:
 tree(id=c("08","081","082","08"), by=c(1,1,1,2))
 
-# EXAMPLE 2
+### EXAMPLE 2
+
+\dontrun{
 
 # load hicp item weights:
 coicops <- hicp.dataimport(
@@ -88,4 +90,5 @@ coicops[tree3==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time and across countries
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
+}
 }

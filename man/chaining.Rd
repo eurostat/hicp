@@ -68,6 +68,8 @@ chain(unchain(res, t, by=NULL), t, by=NULL)
 
 ### EXAMPLE 2
 
+\dontrun{
+
 # get hicp index values for euro area with base 2015:
 dt <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
 dt[, "time":=as.Date(paste0(time, "-01"))]
@@ -85,4 +87,5 @@ aind <- hicp.dataimport(id="prc_hicp_aind", filter=list(unit="INX_A_AVG", geo="E
 aind[, c("geo","unit") := NULL]
 dtcomp <- merge(x=aind, y=dta, by=c("coicop","time"), all=TRUE)
 dtcomp[abs(values-index)>0.01,] # should be empty
+}
 }

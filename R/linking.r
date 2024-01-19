@@ -2,18 +2,18 @@
 
 # Title:  Linking-in new index series
 # Author: Sebastian Weinand
-# Date:   2023-09-05
+# Date:   19 January 2024
 
 # link-in new index series:
 link <- function(x, x.new, t, t.overlap=NULL){
 
   # input checks:
-  .check.num(x=x)
-  .check.num(x=x.new)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.lengths(x=x, y=x.new)
-  .check.char(x=t.overlap, null.ok=TRUE, na.ok=FALSE)
+  check.num(x=x)
+  check.num(x=x.new)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.lengths(x=x, y=x.new)
+  check.char(x=t.overlap, null.ok=TRUE, na.ok=FALSE)
 
   # check:
   if(is.null(t.overlap)) check <- TRUE else check <- FALSE
@@ -75,12 +75,12 @@ link <- function(x, x.new, t, t.overlap=NULL){
 lsf <- function(x, x.new, t, t.overlap=NULL){
 
   # input checks:
-  .check.num(x=x)
-  .check.num(x=x.new)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.lengths(x=x, y=x.new)
-  .check.char(x=t.overlap, null.ok=TRUE, na.ok=FALSE)
+  check.num(x=x)
+  check.num(x=x.new)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.lengths(x=x, y=x.new)
+  check.char(x=t.overlap, null.ok=TRUE, na.ok=FALSE)
 
   # time period intersections:
   t.avail <- as.Date(intersect(as.character(t[!is.na(x)]), as.character(t[!is.na(x.new)])))

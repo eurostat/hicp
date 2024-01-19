@@ -2,7 +2,7 @@
 
 # Title:  Download HICP data
 # Author: Sebastian Weinand
-# Date:   9 August 2023
+# Date:   19 January 2024
 
 # list available HICP datasets:
 hicp.datasets <- function(){
@@ -16,6 +16,7 @@ hicp.datasets <- function(){
   if(is.null(tmp)){
     out <- NULL
   }else{
+    code <- NULL # avoid 'no visible binding'-note in devtools::check()
     out <- tmp[grepl(pattern="^prc_hicp", x=code, ignore.case=TRUE, )]
   }
 
@@ -28,7 +29,7 @@ hicp.datasets <- function(){
 hicp.datafilters <- function(id){
 
   # input checks:
-  .check.char(x=id)
+  check.char(x=id)
 
   out <- as.data.table(
     restatapi::get_eurostat_dsd(
@@ -44,9 +45,9 @@ hicp.datafilters <- function(id){
 hicp.dataimport <- function(id, filters=list(), date.range=NULL, flags=FALSE){
 
   # input checks:
-  .check.char(x=id)
-  .check.char(x=date.range, min.len=1, max.len=2, null.ok=TRUE)
-  .check.log(x=flags, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id)
+  check.char(x=date.range, min.len=1, max.len=2, null.ok=TRUE)
+  check.log(x=flags, min.len=1, max.len=1, na.ok=FALSE)
   if(!is.list(filters)) stop("Non-valid input for filters -> only lists allowed")
 
   # set time filters in query:

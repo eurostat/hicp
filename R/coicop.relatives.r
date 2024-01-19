@@ -2,14 +2,14 @@
 
 # Title:    COICOP relatives
 # Author:   Sebastian Weinand
-# Date:     8 August 2023
+# Date:     19 January 2024
 
 # check validity of coicop code:
 is.coicop <- function(id, unbundle=TRUE){
 
   # input checks:
-  .check.char(x=id)
-  .check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id)
+  check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
 
   rgx <- "(0[0-9]{1}|1[0-2]{1})([1-9]{1}|[1-9]{1}[0-9]{1,2})?"
   # if(!is.null(prefix)) rgx <- paste0("(", prefix, ")?", rgx)
@@ -24,8 +24,8 @@ is.coicop <- function(id, unbundle=TRUE){
 level <- function(id, unbundle=TRUE, label=FALSE){
 
   # input checks:
-  .check.char(x=id)
-  .check.log(x=label, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id)
+  check.log(x=label, min.len=1, max.len=1, na.ok=FALSE)
 
   # set to NA if no valid coicop code:
   id[!hicp::is.coicop(id, unbundle=unbundle)] <- NA_character_
@@ -61,10 +61,10 @@ parent <- function(id, flag=TRUE, unbundle=TRUE, direct=FALSE){
   #               the parent in between are missing
 
   # input checks:
-  .check.char(x=id)
-  .check.log(x=flag, min.len=1, max.len=1, na.ok=FALSE)
-  .check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
-  .check.log(x=direct, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id)
+  check.log(x=flag, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=direct, min.len=1, max.len=1, na.ok=FALSE)
 
   # set non-valid coicop codes to NA:
   id[!hicp::is.coicop(id, unbundle=unbundle)] <- NA_character_
@@ -155,10 +155,10 @@ child <- function(id, flag=TRUE, unbundle=TRUE, direct=FALSE){
   #               the childs in between are missing
 
   # input checks:
-  .check.char(x=id)
-  .check.log(x=flag, min.len=1, max.len=1, na.ok=FALSE)
-  .check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
-  .check.log(x=direct, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id)
+  check.log(x=flag, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=direct, min.len=1, max.len=1, na.ok=FALSE)
 
   # set non-valid coicop codes to NA:
   id[!hicp::is.coicop(id, unbundle=unbundle)] <- NA_character_

@@ -2,10 +2,10 @@
 
 # Title:      COICOP tree
 # Author:     Sebastian Weinand
-# Date:       2023-08-08
+# Date:       19 January 2024
 
 # helper function to check weight sum including coicop bundles:
-.check.weight <- function(id, w, w.all, w.tol=1e-4){
+check.weight <- function(id, w, w.all, w.tol=1e-4){
 
   # without bundle:
   excl <- !hicp::is.bundle(id)
@@ -26,7 +26,7 @@
 }
 
 # helper function to check frequency including coicop bundles:
-.check.freq <- function(id, freq){
+check.freq <- function(id, freq){
 
   # flag coicop bundles:
   bdls <- hicp::is.bundle(id)
@@ -86,16 +86,16 @@ tree <- function(id, by=NULL, w=NULL, w.tol=1/100, max.lvl=NULL, unbundle=TRUE){
   #           in 'id' is used
 
   # input checks:
-  .check.char(x=id)
+  check.char(x=id)
   if(!(!is.list(by) & is.vector(by) || is.factor(by) || is.null(by))){
     stop(paste("Non-valid input for by -> must be a vector or NULL"), call.=FALSE)
   }
-  .check.num(x=w, null.ok=TRUE, int=c(0,Inf))
-  .check.lengths(x=id, y=w)
-  .check.lengths(x=id, y=by)
-  .check.num(x=w.tol, min.len=1, max.len=1, na.ok=FALSE, int=c(0,Inf))
-  .check.num(x=max.lvl, min.len=1, max.len=1, null.ok=TRUE, na.ok=FALSE, int=c(0,Inf))
-  .check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
+  check.num(x=w, null.ok=TRUE, int=c(0,Inf))
+  check.lengths(x=id, y=w)
+  check.lengths(x=id, y=by)
+  check.num(x=w.tol, min.len=1, max.len=1, na.ok=FALSE, int=c(0,Inf))
+  check.num(x=max.lvl, min.len=1, max.len=1, null.ok=TRUE, na.ok=FALSE, int=c(0,Inf))
+  check.log(x=unbundle, min.len=1, max.len=1, na.ok=FALSE)
 
   # one group:
   if(is.null(by)) by <- rep(1, length(id))
@@ -184,7 +184,7 @@ tree <- function(id, by=NULL, w=NULL, w.tol=1/100, max.lvl=NULL, unbundle=TRUE){
             if(is.null(w)){
               check <- TRUE
             }else{
-              check <- .check.weight(
+              check <- check.weight(
                 id=id.tmp,
                 w=w[by%in%M[m]][idx>0], # weight of temporary ids
                 w.all=w[by%in%M[m] & id==id.tab[j]], # weight of parent
@@ -205,7 +205,7 @@ tree <- function(id, by=NULL, w=NULL, w.tol=1/100, max.lvl=NULL, unbundle=TRUE){
         out.tmp <- unlist(out.tmp)
 
         # drop bundles if subcomponents available:
-        out.tmp <- .check.freq(id=out.tmp, freq=length(M))
+        out.tmp <- check.freq(id=out.tmp, freq=length(M))
 
         # store result:
         if(length(out.tmp)>0) out[[j]] <- out.tmp

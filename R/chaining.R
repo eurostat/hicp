@@ -2,16 +2,16 @@
 
 # Title:  Chain-linking, rebasing and index frequency conversion
 # Author: Sebastian Weinand
-# Date:   2023-08-04
+# Date:   19 January 2024
 
 # unchain monthly time series:
 unchain <- function(x, t, by=12){
 
   # input checks:
-  .check.num(x=x)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.num(x=by, min.len=1, max.len=1, null.ok=TRUE, int=c(1,12))
+  check.num(x=x)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.num(x=by, min.len=1, max.len=1, null.ok=TRUE, int=c(1,12))
 
   # extract year and month:
   t <- as.Date(x=t, format="%Y-%m-%d")
@@ -51,10 +51,10 @@ unchain <- function(x, t, by=12){
 chain <- function(x, t, by=12){
 
   # input checks:
-  .check.num(x=x)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.num(x=by, min.len=1, max.len=1, null.ok=TRUE, int=c(1,12))
+  check.num(x=x)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.num(x=by, min.len=1, max.len=1, null.ok=TRUE, int=c(1,12))
 
   # extract year and month:
   t <- as.Date(x=t, format="%Y-%m-%d")
@@ -142,11 +142,11 @@ chain <- function(x, t, by=12){
 rebase <- function(x, t, t.ref, verbose=FALSE){
 
   # input checks:
-  .check.num(x=x)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.char(x=t.ref, min.len=1, max.len=1, miss.ok=TRUE, null.ok=TRUE, na.ok=FALSE)
-  .check.log(x=verbose, min.len=1, max.len=1, na.ok=FALSE)
+  check.num(x=x)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.char(x=t.ref, min.len=1, max.len=1, miss.ok=TRUE, null.ok=TRUE, na.ok=FALSE)
+  check.log(x=verbose, min.len=1, max.len=1, na.ok=FALSE)
 
   # set in case no input provided:
   if(missing(t.ref)) t.ref <- "no_rebasement"
@@ -219,10 +219,10 @@ rebase <- function(x, t, t.ref, verbose=FALSE){
 convert <- function(x, t, freq="annual"){
 
   # input checks:
-  .check.num(x=x)
-  .check.date(x=t, na.ok=FALSE)
-  .check.lengths(x=x, y=t)
-  .check.char(x=freq, min.len=1, max.len=1, miss.ok=TRUE, null.ok=FALSE, na.ok=FALSE)
+  check.num(x=x)
+  check.date(x=t, na.ok=FALSE)
+  check.lengths(x=x, y=t)
+  check.char(x=freq, min.len=1, max.len=1, miss.ok=TRUE, null.ok=FALSE, na.ok=FALSE)
 
   # match input:
   freq <- match.arg(arg=freq, choices=c("annual","quarterly"))

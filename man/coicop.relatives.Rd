@@ -68,6 +68,8 @@ parent(id=ids, flag=FALSE, unbundle=TRUE, direct=TRUE)
 
 ### EXAMPLE 2
 
+\dontrun{
+
 # load hicp item weights:
 coicops <- hicp.dataimport(id="prc_hicp_inw", filter=list(geo="EA"))
 coicops <- coicops[grepl("^CP", coicop),]
@@ -84,4 +86,5 @@ coicops[, "has_child":=child(id=coicop, flag=TRUE), by="time"]
 coicops[has_child==FALSE, sum(values, na.rm=TRUE), by="time"]
 # coicop bundles and their component ids are both taken into
 # account. this double counting explains some differences
+}
 }
