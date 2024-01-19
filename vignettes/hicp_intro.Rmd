@@ -112,7 +112,7 @@ child(id=ids, flag=FALSE, direct=FALSE)
 
 ## Deriving the COICOP tree for index aggregation
 
-The functions `children()` and `parents()` may be useful for various reasons. To derive the composition of COICOP codes at the lowest possible level, however, function `tree()` is better suited. For the HICP, the derivation of this composition can be done separately for each reporting month and country. Consequently, the selection of COICOP codes can differ across space and time. If needed, however, specifying argument `by` in function `tree()` allows to merge the composition of COICOP codes at the lowest possible level, e.g., to obtain a unique selection of the same COICOP codes over time. Because the derivation of COICOP codes searches in the whole COICOP tree, the resulting composition of COICOP codes is also denoted as the *COICOP tree* in this package. 
+The functions `child()` and `parents()` may be useful for various reasons. To derive the composition of COICOP codes at the lowest possible level, however, function `tree()` is better suited. For the HICP, the derivation of this composition can be done separately for each reporting month and country. Consequently, the selection of COICOP codes can differ across space and time. If needed, however, specifying argument `by` in function `tree()` allows to merge the composition of COICOP codes at the lowest possible level, e.g., to obtain a unique selection of the same COICOP codes over time. Because the derivation of COICOP codes searches in the whole COICOP tree, the resulting composition of COICOP codes is also denoted as the *COICOP tree* in this package. 
 ```{r warning=FALSE}
 # load data.table-package:
 require(data.table)
