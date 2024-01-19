@@ -30,7 +30,7 @@ library(hicp) # load package
 
 # HICP data
 
-The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://cran.r-project.org/web/packages/restatapi/index.html)-package. This section shows how to list, filter and retrieve HICP data using the functions `hicp.datasets()`, `hicp.datafilters()`, and `hicp.dataimport()`.
+The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://cran.r-project.org/web/packages/restatapi)-package. This section shows how to list, filter and retrieve HICP data using the functions `hicp.datasets()`, `hicp.datafilters()`, and `hicp.dataimport()`.
 
 ## Step 1: Available datasets
 
