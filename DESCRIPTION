@@ -3,7 +3,7 @@ Type: Package
 Title: Harmonised Index of Consumer Prices
 Version: 0.4.0
 Author: Sebastian Weinand
-Maintainer: Sebastian Weinand <sebastian.weinand@ec.europa.eu>
+Maintainer: Sebastian Weinand <s.weinand90@gmail.com>
 Description: Functions to get HICP data from Eurostat's database, for index aggregation and the computation of change rates.
 License: EUPL
 Encoding: UTF-8
@@ -15,3 +15,4 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: no
 Packaged: 2023-11-03 12:24:24 UTC; weinase
+RoxygenNote: 7.2.3
