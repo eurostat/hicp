@@ -16,6 +16,10 @@ vignette: >
 ```{r, include = FALSE}
 Sys.setenv(LANGUAGE="en")
 
+# set cores for testing on CRAN via devtools::check_rhub()
+library(restatapi)
+options(restatapi_cores=1)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -30,7 +34,7 @@ library(hicp) # load package
 
 # HICP data
 
-The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://cran.r-project.org/web/packages/restatapi)-package. This section shows how to list, filter and retrieve HICP data using the functions `hicp.datasets()`, `hicp.datafilters()`, and `hicp.dataimport()`.
+The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://CRAN.R-project.org/package=restatapi)-package. This section shows how to list, filter and retrieve HICP data using the functions `hicp.datasets()`, `hicp.datafilters()`, and `hicp.dataimport()`.
 
 ## Step 1: Available datasets
 

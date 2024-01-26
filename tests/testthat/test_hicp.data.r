@@ -1,5 +1,9 @@
 # START
 
+# set cores for testing on CRAN via devtools::check_rhub()
+suppressPackageStartupMessages(library(restatapi))
+options(restatapi_cores=1)
+
 
 # Function hicp.datasets() ------------------------------------------------
 
