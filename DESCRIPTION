@@ -2,9 +2,11 @@ Package: hicp
 Type: Package
 Title: Harmonised Index of Consumer Prices
 Version: 0.4.0
-Author: Sebastian Weinand
-Maintainer: Sebastian Weinand <s.weinand90@gmail.com>
-Description: Functions to get HICP data from Eurostat's database, for index aggregation and the computation of change rates.
+Authors@R: person(given = "Sebastian", 
+                  family = "Weinand", 
+                  role = c("aut", "cre"),
+                  email = "sebastian.weinand@ec.europa.eu")
+Description: Functions to get data for the Harmonised Index of Consumer Prices (HICP) from Eurostat's public database, for index aggregation and the computation of inflation rates.
 License: EUPL
 Encoding: UTF-8
 LazyData: true
