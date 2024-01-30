@@ -46,7 +46,7 @@ rates <- function(x, t=NULL, type="monthly"){
     y <- format(t0, "%Y")
     res <- tapply(X=x, INDEX=y, FUN=mean, na.rm=TRUE)
     res[tapply(X=x, INDEX=y, FUN=length)<12] <- NA
-    res <- c(res/shift(res, n=1))
+    res <- c(res/shift(as.vector(res), n=1))
     if(t.null) names(res) <- NULL # drop names
 
   }else{
