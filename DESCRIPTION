@@ -16,7 +16,5 @@ Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-11-03 12:24:24 UTC; weinase
-RoxygenNote: 7.2.3
 URL: https://github.com/eurostat/hicp
 BugReports: https://github.com/eurostat/hicp/issues
