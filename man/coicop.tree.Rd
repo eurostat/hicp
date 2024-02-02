@@ -60,7 +60,7 @@ tree(id=c("08","081","082","08"), by=c(1,1,1,2))
 
 ### EXAMPLE 2
 
-\dontrun{
+\donttest{
 
 # load hicp item weights:
 coicops <- hicp.dataimport(

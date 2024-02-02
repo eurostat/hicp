@@ -40,7 +40,7 @@ See Eurostat's public database at \url{https://ec.europa.eu/eurostat/web/main/da
 }
 
 \examples{
-\dontrun{
+\donttest{
 
 # view available datasets:
 hicp.datasets()

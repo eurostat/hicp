@@ -51,7 +51,7 @@ rates(x=P, t=t, type="annual-average")
 
 ### EXAMPLE 2: Contributions using published HICP data
 
-\dontrun{
+\donttest{
 
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))

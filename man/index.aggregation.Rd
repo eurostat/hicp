@@ -103,7 +103,7 @@ dt[, aggregate(x=price, w0=weight, grp=coicop,
 
 ### EXAMPLE 2: Index aggregation using published HICP data
 
-\dontrun{
+\donttest{
 
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))

@@ -68,7 +68,7 @@ parent(id=ids, flag=FALSE, unbundle=TRUE, direct=TRUE)
 
 ### EXAMPLE 2
 
-\dontrun{
+\donttest{
 
 # load hicp item weights:
 coicops <- hicp.dataimport(id="prc_hicp_inw", filter=list(geo="EA"))

@@ -68,7 +68,7 @@ chain(unchain(res, t, by=NULL), t, by=NULL)
 
 ### EXAMPLE 2
 
-\dontrun{
+\donttest{
 
 # get hicp index values for euro area with base 2015:
 dt <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
