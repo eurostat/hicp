@@ -2,7 +2,7 @@
 
 # Title:  Chain-linking, rebasing and index frequency conversion
 # Author: Sebastian Weinand
-# Date:   19 January 2024
+# Date:   7 February 2024
 
 # unchain monthly time series:
 unchain <- function(x, t, by=12){
@@ -78,7 +78,6 @@ chain <- function(x, t, by=12){
     x.ref.cum <- unlist(
       x=tapply(x.ref, y.ref.grp, FUN=function(z) cumprod(ifelse(is.na(z), 1, z))),
       use.names=FALSE)
-    #x.ref.cum <- cumprod(ifelse(is.na(x.ref), 1, x.ref))
 
     # set names:
     names(x.ref.cum) <- names(y.ref.grp)
@@ -120,7 +119,6 @@ chain <- function(x, t, by=12){
     x.ref.cum <- unlist(
       x=tapply(x.ref, y.ref.grp, FUN=function(z) cumprod(ifelse(is.na(z), 1, z))),
       use.names=FALSE)
-    #x.ref.cum <- cumprod(ifelse(is.na(x.ref), 1, x.ref))
 
     # replicate cumulative growth rates:
     x.ref.cum.shifted <- rep(x=x.ref.cum, y.ref.tab)
@@ -238,7 +236,7 @@ convert <- function(x, t, freq="annual"){
   # compute average index if all months or quarters are available:
   out <- tapply(X=x, INDEX=by, FUN=mean, na.rm=FALSE)
   out[tapply(x, by, length)<n] <- NA_real_
-  out <- data.table("time"=as.character(names(out)), "index"=as.numeric(out))
+  out <- stats::setNames(as.vector(out), names(out))
 
   # return output:
   return(out)
