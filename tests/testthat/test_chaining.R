@@ -242,21 +242,21 @@ t <- seq.Date(from=as.Date("2021-10-01"), to=as.Date("2024-12-01"), by="1 month"
 p <- rnorm(n=length(t), mean=100, sd=5)
 
 expect_true(
-  is.data.table(convert(x=p, t=t, freq="annual"))
+  is.vector(convert(x=p, t=t, freq="annual"))
 )
 
 expect_true(
-  is.data.table(convert(x=p, t=t, freq="q"))
+  is.vector(convert(x=p, t=t, freq="q"))
 )
 
 expect_equal(
   1,
-  sum(is.na(convert(x=p, t=t, freq="annual")$index))
+  sum(is.na(convert(x=p, t=t, freq="annual")))
 )
 
 expect_equal(
   0,
-  sum(is.na(convert(x=p, t=t, freq="quarterly")$index))
+  sum(is.na(convert(x=p, t=t, freq="quarterly")))
 )
 
 ### (B) index series from january to december:
@@ -265,12 +265,12 @@ p <- rnorm(n=length(t), mean=100, sd=5)
 
 expect_equal(
   0,
-  sum(is.na(convert(x=p, t=t, freq="annual")$index))
+  sum(is.na(convert(x=p, t=t, freq="annual")))
 )
 
 expect_equal(
   0,
-  sum(is.na(convert(x=p, t=t, freq="quarterly")$index))
+  sum(is.na(convert(x=p, t=t, freq="quarterly")))
 )
 
 ### (C) index series from february to december:
@@ -279,12 +279,12 @@ p <- rnorm(n=length(t), mean=100, sd=5)
 
 expect_equal(
   1,
-  sum(is.na(convert(x=p, t=t, freq="annual")$index))
+  sum(is.na(convert(x=p, t=t, freq="annual")))
 )
 
 expect_equal(
   1,
-  sum(is.na(convert(x=p, t=t, freq="quarterly")$index))
+  sum(is.na(convert(x=p, t=t, freq="quarterly")))
 )
 
 
