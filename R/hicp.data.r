@@ -2,13 +2,13 @@
 
 # Title:  Download HICP data
 # Author: Sebastian Weinand
-# Date:   19 January 2024
+# Date:   5 February 2024
 
 # list available HICP datasets:
 hicp.datasets <- function(){
 
   # download table of contents of all datasets:
-  tmp <- as.data.table(
+  tmp <- data.table::as.data.table(
     restatapi::get_eurostat_toc(mode="txt", lang="en", verbose=FALSE)
   )
 
@@ -16,8 +16,7 @@ hicp.datasets <- function(){
   if(is.null(tmp)){
     out <- NULL
   }else{
-    code <- NULL # avoid 'no visible binding'-note in devtools::check()
-    out <- tmp[grepl(pattern="^prc_hicp", x=code, ignore.case=TRUE, )]
+    out <- tmp[grepl(pattern="^prc_hicp", x=tmp$code, ignore.case=TRUE),]
   }
 
   # return output:
@@ -31,7 +30,7 @@ hicp.datafilters <- function(id){
   # input checks:
   check.char(x=id)
 
-  out <- as.data.table(
+  out <- data.table::as.data.table(
     restatapi::get_eurostat_dsd(
       id=id,
       lang="en",
@@ -66,7 +65,7 @@ hicp.dataimport <- function(id, filters=list(), date.range=NULL, flags=FALSE){
   if(length(filters)<=0) filters <- NULL
 
   # get data:
-  dt <- as.data.table(
+  dt <- data.table::as.data.table(
     restatapi::get_eurostat_data(
       id=id,
       filters=filters,

@@ -2,7 +2,7 @@
 
 # Title:    COICOP relatives
 # Author:   Sebastian Weinand
-# Date:     19 January 2024
+# Date:     5 February 2024
 
 # check validity of coicop code:
 is.coicop <- function(id, unbundle=TRUE){
@@ -83,7 +83,7 @@ parent <- function(id, flag=TRUE, unbundle=TRUE, direct=FALSE){
       id.tab <- hicp::unbundle(id=id.tab)
     }else{
       names(id.tab) <- id.tab
-      id.tab[is.bundle(id.tab)] <- NA
+      id.tab[hicp::is.bundle(id.tab)] <- NA
     }
 
     # drop NAs:
@@ -177,7 +177,7 @@ child <- function(id, flag=TRUE, unbundle=TRUE, direct=FALSE){
       id.tab <- hicp::unbundle(id=id.tab)
     }else{
       names(id.tab) <- id.tab
-      id.tab[is.bundle(id.tab)] <- NA
+      id.tab[hicp::is.bundle(id.tab)] <- NA
     }
 
     # drop NAs:

@@ -2,7 +2,7 @@
 
 # Title:  Change rates and contributions
 # Author: Sebastian Weinand
-# Date:   19 January 2024
+# Date:   5 February 2024
 
 # compute change rates:
 rates <- function(x, t=NULL, type="monthly"){
@@ -35,10 +35,10 @@ rates <- function(x, t=NULL, type="monthly"){
   }
 
   # monthly change rate:
-  if(type=="monthly") res <- x/shift(x, n=1)
+  if(type=="monthly") res <- x/data.table::shift(x, n=1)
 
   # annual change rate:
-  if(type=="annual") res <- x/shift(x, n=12)
+  if(type=="annual") res <- x/data.table::shift(x, n=12)
 
   # annual average change rate:
   if(type=="annual-average"){
@@ -46,7 +46,7 @@ rates <- function(x, t=NULL, type="monthly"){
     y <- format(t0, "%Y")
     res <- tapply(X=x, INDEX=y, FUN=mean, na.rm=TRUE)
     res[tapply(X=x, INDEX=y, FUN=length)<12] <- NA
-    res <- c(res/shift(as.vector(res), n=1))
+    res <- c(res/data.table::shift(as.vector(res), n=1))
     if(t.null) names(res) <- NULL # drop names
 
   }else{
@@ -83,8 +83,8 @@ contrib <- function(x, w, t, x.all, w.all, method="ribe"){
   method <- match.arg(arg=method, choices=c("ribe","kirchner"))
 
   # unchain indices:
-  x.unchained <- unchain(x=x, t=t, by=12)
-  x.all.unchained <- unchain(x=x.all, t=t, by=12)
+  x.unchained <- hicp::unchain(x=x, t=t, by=12)
+  x.all.unchained <- hicp::unchain(x=x.all, t=t, by=12)
   # # set total values if missing; this leads to an outcome
   # # that coincides with the annual rates of change of 'x':
   # if(is.null(x.all) | is.null(w.all)){
@@ -109,16 +109,17 @@ contrib <- function(x, w, t, x.all, w.all, method="ribe"){
   # ribe decompositon:
   if(method=="ribe"){
     # compute this-year term and last-year term:
-    ty <- 100*shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
-    ly <- shift(x=100*(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
+    ty <- 100*data.table::shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
+    ly <- data.table::shift(x=100*(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
     if(any(abs(ly[t.dec])>0.0001, na.rm=TRUE)){
       warning("Last year term in December deviates from 0. Something might be wrong here.", call.=FALSE)
     }
     res <- ty+ly
   }
 
+  # kirchner decomposition:
   if(method=="kirchner"){
-    ty <- 100*shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
+    ty <- 100*data.table::shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
     ly1 <- 100*x.all.unchained*shift(x=(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
     ly2 <- 100*(w/w.all)*(x.unchained-1)*shift(x=(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
     res <- ty+ly1-ly2

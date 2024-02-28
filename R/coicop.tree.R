@@ -2,9 +2,9 @@
 
 # Title:      COICOP tree
 # Author:     Sebastian Weinand
-# Date:       19 January 2024
+# Date:       5 February 2024
 
-# helper function to check weight sum including coicop bundles:
+# non-exported helper function to check weight sum including coicop bundles:
 check.weight <- function(id, w, w.all, w.tol=1e-4){
 
   # without bundle:
@@ -25,7 +25,7 @@ check.weight <- function(id, w, w.all, w.tol=1e-4){
 
 }
 
-# helper function to check frequency including coicop bundles:
+# non-exported helper function to check frequency including coicop bundles:
 check.freq <- function(id, freq){
 
   # flag coicop bundles:

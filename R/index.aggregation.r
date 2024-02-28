@@ -2,7 +2,7 @@
 
 # Title:  Index number methods and aggregation
 # Author: Sebastian Weinand
-# Date:   19 January 2024
+# Date:   5 February 2024
 
 # bilateral index functions:
 laspey <- function(x, w0, wt=NULL){
@@ -219,23 +219,23 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   if(all(names(index)%in%na.index, na.rm=TRUE)) stop("Non-valid input for index -> weights must match index function(s)")
 
   # gather data:
-  dt <- data.table(grp, w0, wt, x)
+  dt <- data.table::data.table(grp, w0, wt, x)
   dt <- dt[grp!="00",]
   if(!all(is.na(dt$x))) dt <- dt[!is.na(x), ] # drop these NAs because they would bias aggregation
   dt[, names(index) := x]
   dt[, "x":=NULL]
-  setkey(x=dt, key="grp") # do not set the key before
+  data.table::setkey(x=dt, key="grp") # do not set the key before
   if(nrow(dt)<=1L) return(NULL) # no aggregation possible
 
   # data for stepwise aggregation:
-  dt.agg <- copy(dt)
+  dt.agg <- data.table::copy(dt)
 
   # keep either coicop bundles or their components,
   # but not both. to allow aggregation, where the last
   # digit of a coicop id is dropped in each step,
   # replace bundle codes with their (first) component:
   dt.agg <- dt.agg[keep.bundle(id=grp),]
-  grp.unbl <- unbundle(dt.agg$grp)
+  grp.unbl <- hicp::unbundle(dt.agg$grp)
   dt.agg$grp <- grp.unbl[!duplicated(names(grp.unbl))]
 
   # bottom level to top:
@@ -267,7 +267,7 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
     grp.add <- setdiff(unique(dt.agg[nchar(grp)<i, grp]), unique(res$grp))
     dt.add <- dt.agg[grp%in%grp.add, ]
     dt.add[, "parent" := NULL]
-    dt.agg <- rbindlist(l=list(res, dt.add), use.names=TRUE)
+    dt.agg <- data.table::rbindlist(l=list(res, dt.add), use.names=TRUE)
 
     # store results of this aggregation step:
     out[[i-1]] <- res
@@ -275,7 +275,7 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   }
 
   # rbind results:
-  out <- rbindlist(l=out)
+  out <- data.table::rbindlist(l=out)
 
   # add user-defined aggregates:
   for(j in seq_along(add)){
@@ -287,25 +287,25 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
         "wt"=sum(wt, na.rm=TRUE)),
         .SDcols=names(index)]
     }else{
-      add[[j]] <- data.table("grp"=names(add)[[j]])
+      add[[j]] <- data.table::data.table("grp"=names(add)[[j]])
     }
   }
 
   # rbind results:
-  add <- rbindlist(l=add, use.names=TRUE, fill=TRUE)
-  out <- rbindlist(l=list(out, add), use.names=TRUE, fill=TRUE)
+  add <- data.table::rbindlist(l=add, use.names=TRUE, fill=TRUE)
+  out <- data.table::rbindlist(l=list(out, add), use.names=TRUE, fill=TRUE)
   out[, "is_aggregated":=TRUE]
-  setcolorder(x=out, c("grp","is_aggregated","w0","wt"))
+  data.table::setcolorder(x=out, c("grp","is_aggregated","w0","wt"))
   if(length(na.index)>0) out[, (na.index) := NA_real_]
 
   # add lowest level if wanted:
   if(keep.lowest){
 
     # lowest level indices are always laspeyres in HICP:
-    dt.low <- data.table(grp,"is_aggregated"=FALSE,w0,wt)
+    dt.low <- data.table::data.table(grp, "is_aggregated"=FALSE, w0, wt)
     dt.low[, names(index) := x]
     grp.add <- setdiff(unique(dt.low$grp), unique(out$grp))
-    out <- rbindlist(l=list(out, dt.low[grp%in%grp.add]), use.names=TRUE, fill=TRUE)
+    out <- data.table::rbindlist(l=list(out, dt.low[grp%in%grp.add]), use.names=TRUE, fill=TRUE)
 
   }else{
 
@@ -317,7 +317,7 @@ aggregate <- function(x, w0, wt, grp, index=laspey, add=list(), keep.lowest=TRUE
   # set names and key:
   if(w0.miss) out[, "w0":=NULL]
   if(wt.miss) out[, "wt":=NULL]
-  setkeyv(x=out, cols="grp")
+  data.table::setkeyv(x=out, cols="grp")
 
   # print output to console:
   return(out)

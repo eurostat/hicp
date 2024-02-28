@@ -2,7 +2,7 @@
 
 # Title:    COICOP bundles
 # Author:   Sebastian Weinand
-# Date:     19 January 2024
+# Date:     5 February 2024
 
 # eurobase or matis bundle codes and their components:
 coicop.bundles <- list(
@@ -33,7 +33,7 @@ is.bundle <- function(id){
   check.char(x=id, min.len=0, max.len=Inf)
 
   # output:
-  id%in%names(coicop.bundles)
+  return(id%in%names(coicop.bundles))
 
 }
 
@@ -50,12 +50,6 @@ unbundle <- function(id){
   out[idx] <- id[idx]
   out <- stats::setNames(unlist(x=out, use.names=FALSE), rep(id, lengths(out)))
   return(out)
-
-  # m <- grepl(pattern="-", x=id)
-  # l <- strsplit(x=id, split="\\s?(-|\\_)\\s?")
-  # l[m] <- lapply(X=l[m1], FUN=function(z) formatC(x=z[1]:z[2], width=nchar(z)[1], flag="0"))
-  # names(l) <- id
-  # return(l)
 
 }
 
