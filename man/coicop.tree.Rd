@@ -32,8 +32,6 @@ A logical vector of the same length as \code{id}.
 }
 
 \examples{
-require(data.table)
-
 ### EXAMPLE 1
 
 # flag lowest possible level to be used as COICOP tree:
@@ -59,8 +57,11 @@ tree(id=c("08","081","082_083"), w=c(0.25,0.05,0.2), unbundle=FALSE)
 tree(id=c("08","081","082","08"), by=c(1,1,1,2))
 
 ### EXAMPLE 2
-
 \donttest{
+# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
+library(data.table)
 
 # load hicp item weights:
 coicops <- hicp.dataimport(
@@ -90,5 +91,4 @@ coicops[tree3==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time and across countries
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
-}
-}
+}}

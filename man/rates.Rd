@@ -32,12 +32,10 @@ For \code{contrib()}, a numeric vector of the same length as \code{x}.
 }
 
 \references{
-Eurostat (2018), \emph{Harmonised Index of Consumer Prices (HICP) Methodological Manual}, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/-/ks-gq-17-015}.
+Eurostat (2024), \emph{Harmonised Index of Consumer Prices (HICP): Methodological Manual}, Luxembourg: Publications Office of the European Union, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/w/ks-gq-24-003}.
 }
 
 \examples{
-require(data.table)
-
 ### EXAMPLE 1
 
 P <- rnorm(n=25,mean=100,sd=5)
@@ -48,10 +46,12 @@ rates(x=P, type="annual")
 rates(x=P, type="annual-average")
 rates(x=P, t=t, type="annual-average")
 
-
 ### EXAMPLE 2: Contributions using published HICP data
-
 \donttest{
+# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
+library(data.table)
 
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
@@ -92,5 +92,4 @@ dt.comp <- merge(x=hicp.ctrb,
                  by=c("coicop","time"),
                  all=TRUE)
 head(dt.comp[!is.na(values) & abs(values-ribe)>0.1, ]) # should be empty
-}
-}
+}}

@@ -44,8 +44,6 @@ Function \code{is.coicop()} returns a logical vector and function \code{level()}
 }
 
 \examples{
-require(data.table)
-
 ### EXAMPLE 1
 
 # validity of coicop id:
@@ -67,8 +65,11 @@ parent(id=ids, flag=FALSE, unbundle=FALSE, direct=TRUE)
 parent(id=ids, flag=FALSE, unbundle=TRUE, direct=TRUE)
 
 ### EXAMPLE 2
-
 \donttest{
+# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
+library(data.table)
 
 # load hicp item weights:
 coicops <- hicp.dataimport(id="prc_hicp_inw", filter=list(geo="EA"))
@@ -86,5 +87,4 @@ coicops[, "has_child":=child(id=coicop, flag=TRUE), by="time"]
 coicops[has_child==FALSE, sum(values, na.rm=TRUE), by="time"]
 # coicop bundles and their component ids are both taken into
 # account. this double counting explains some differences
-}
-}
+}}

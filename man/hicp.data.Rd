@@ -40,7 +40,9 @@ See Eurostat's public database at \url{https://ec.europa.eu/eurostat/web/main/da
 }
 
 \examples{
-\donttest{
+\donttest{# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
 
 # view available datasets:
 hicp.datasets()
@@ -50,5 +52,4 @@ hicp.datafilters(id="prc_hicp_inw")
 
 # download item weights for euro area from 2015 on:
 hicp.dataimport(id="prc_hicp_inw", filters=list("geo"="EA"), date.range=c("2015", NA))
-}
-}
+}}

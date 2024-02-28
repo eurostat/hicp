@@ -60,11 +60,11 @@ Function \code{aggregate()} returns a \code{data.table} of aggregated values at 
 }
 
 \references{
-Eurostat (2018), \emph{Harmonised Index of Consumer Prices (HICP) Methodological Manual}, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/-/ks-gq-17-015}.
+Eurostat (2024), \emph{Harmonised Index of Consumer Prices (HICP): Methodological Manual}, Luxembourg: Publications Office of the European Union, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/w/ks-gq-24-003}.
 }
 
 \examples{
-require(data.table)
+library(data.table)
 
 ### EXAMPLE 1
 
@@ -100,10 +100,11 @@ dt[, aggregate(x=price, w0=weight, grp=coicop,
                add=list("FOOD"=c("01111","021"), "MISS"=c("021","09"))),
      by="time"]
 
-
 ### EXAMPLE 2: Index aggregation using published HICP data
-
 \donttest{
+# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
 
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
@@ -174,5 +175,4 @@ agg.comp <- merge(
 
 # no differences -> consistent in aggregation:
 head(agg.comp[abs(index_stpwse-index_direct)>1e-4,])
-}
-}
+}}
