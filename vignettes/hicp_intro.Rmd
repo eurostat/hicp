@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 ```
 
 <br/><br/>
-The Harmonised Index of Consumer Prices (HICP) is the key economic figure to measure inflation in the euro area. The methodology underlying the HICP is documented in the HICP Methodological Manual [@Eurostat2018]. Based on this manual, the `hicp`-package provides functions for data users to work with publicly available HICP price indices and weights (*upper-level aggregation*). The following vignette highlights the main package features. It contains three sections on data access, the Classification of Consumption by Individual Purpose (COICOP) underlying the HICP, and index aggregation.   
+The Harmonised Index of Consumer Prices (HICP) is the key economic figure to measure inflation in the euro area. The methodology underlying the HICP is documented in the HICP Methodological Manual [@Eurostat2024]. Based on this manual, the `hicp`-package provides functions for data users to work with publicly available HICP price indices and weights (*upper-level aggregation*). The following vignette highlights the main package features. It contains three sections on data access, the Classification of Consumption by Individual Purpose (COICOP) underlying the HICP, and index aggregation.   
 ```{r setup, message=FALSE}
 library(hicp) # load package
 ```
@@ -150,7 +150,7 @@ All three COICOP trees in the example above can be used to aggregate the all-ite
 
 # Index aggregation, rates of change, and contributions
 
-The HICP is a chain-linked Laspeyres-type index [@EU2016]. The (unchained) price indices in each calendar year refer to December of the previous year, which is the *price reference period*. These price indices are chain-linked to the existing index using December to obtain the HICP. The HICP indices currently refer to the *index reference period* 2015=100. Monthly and annual change rates can be derived from the price indices. The contributions of the price changes of individual items to the annual rate of change can be computed by the "Ribe contributions". More details can be found in @Eurostat2018[, chapter 8].
+The HICP is a chain-linked Laspeyres-type index [@EU2016]. The (unchained) price indices in each calendar year refer to December of the previous year, which is the *price reference period*. These price indices are chain-linked to the existing index using December to obtain the HICP. The HICP indices currently refer to the *index reference period* 2015=100. Monthly and annual change rates can be derived from the price indices. The contributions of the price changes of individual items to the annual rate of change can be computed by the "Ribe contributions". More details can be found in @Eurostat2024[, chapter 8].
 
 ## Index aggregation
 
