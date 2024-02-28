@@ -32,7 +32,9 @@ convert(x, t, freq="annual")
 }
 
 \value{
-Functions \code{unchain()}, \code{chain()} and \code{rebase()} return numeric values of the same length as \code{x}. Function \code{convert()} returns a data.table with columns \code{time} and \code{index}.
+Functions \code{unchain()}, \code{chain()} and \code{rebase()} return numeric values of the same length as \code{x}.
+
+Function \code{convert()} returns a named vector of the length of quarter or years available in \code{t}, where the names correspond to the years or quarters.
 }
 
 \seealso{
@@ -40,12 +42,10 @@ Functions \code{unchain()}, \code{chain()} and \code{rebase()} return numeric va
 }
 
 \references{
-Eurostat (2018), \emph{Harmonised Index of Consumer Prices (HICP) Methodological Manual}, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/-/ks-gq-17-015}.
+Eurostat (2024), \emph{Harmonised Index of Consumer Prices (HICP): Methodological Manual}, Luxembourg: Publications Office of the European Union, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/w/ks-gq-24-003}.
 }
 
 \examples{
-require(data.table)
-
 ### EXAMPLE 1
 
 t <- seq.Date(from=as.Date("2021-12-01"), to=as.Date("2024-12-01"), by="1 month")
@@ -67,8 +67,11 @@ p <- rnorm(n=length(t), mean=100, sd=5)
 chain(unchain(res, t, by=NULL), t, by=NULL)
 
 ### EXAMPLE 2
-
 \donttest{
+# set cores for testing on CRAN:
+library(restatapi)
+options(restatapi_cores=1)
+library(data.table)
 
 # get hicp index values for euro area with base 2015:
 dt <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
@@ -82,10 +85,10 @@ dt[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="coicop"]
 dt[abs(values-index_own)>0.01,] # should be empty
 
 # check converted indices against published data:
-dta <- dt[, convert(x=values, t=time), by="coicop"]
+dta <- dt[, as.data.table(convert(x=values, t=time), keep.rownames=TRUE), by="coicop"]
+setnames(x=dta, c("coicop","time","index"))
 aind <- hicp.dataimport(id="prc_hicp_aind", filter=list(unit="INX_A_AVG", geo="EA"))
 aind[, c("geo","unit") := NULL]
 dtcomp <- merge(x=aind, y=dta, by=c("coicop","time"), all=TRUE)
 dtcomp[abs(values-index)>0.01,] # should be empty
-}
-}
+}}
