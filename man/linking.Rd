@@ -23,7 +23,7 @@ lsf(x, x.new, t, t.overlap=NULL)
 }
 
 \value{
-Function \code{link()} returns a numeric vector of the same length as \code{t}, while \code{lsf()} provides a numeric vector of the same length as \code{t.overlap}.
+Function \code{link()} returns a numeric vector or a matrix of the same length as \code{t}, while \code{lsf()} provides a named numeric vector of the same length as \code{t.overlap}.
 }
 
 \seealso{
@@ -31,8 +31,6 @@ Function \code{link()} returns a numeric vector of the same length as \code{t}, 
 }
 
 \examples{
-require(data.table)
-
 # input data:
 set.seed(1)
 t <- seq.Date(from=as.Date("2015-01-01"), to=as.Date("2024-05-01"), by="1 month")
