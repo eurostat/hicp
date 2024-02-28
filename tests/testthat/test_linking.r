@@ -16,8 +16,13 @@ expect_equal(
 )
 
 expect_equal(
-  data.table("2021-12"=res1, "2021"=res2, "2022"=res3),
+  as.matrix(data.table("2021-12"=res1, "2021"=res2, "2022"=res3)),
   suppressMessages(link(x=p, x.new=p.new, t=t, t.overlap=c("2021-12","2021","2022")))
+)
+
+expect_equal(
+  res3,
+  suppressMessages(link(x=p, x.new=p.new, t=t, t.overlap="2022"))
 )
 
 lsf1 <- p[t=="2021-12-01"]/p.new[t=="2021-12-01"]
