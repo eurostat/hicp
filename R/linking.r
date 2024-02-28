@@ -2,7 +2,7 @@
 
 # Title:  Linking-in new index series
 # Author: Sebastian Weinand
-# Date:   19 January 2024
+# Date:   5 February 2024
 
 # link-in new index series:
 link <- function(x, x.new, t, t.overlap=NULL){
@@ -46,7 +46,9 @@ link <- function(x, x.new, t, t.overlap=NULL){
   if(!all(!keep) & any(!keep)) message("Some overlap period(s) not found.")
 
   # output container:
-  out <- matrix(data=x, byrow=FALSE, ncol=max(1, length(t.overlap)), nrow=length(t), dimnames=list(NULL, t.overlap))
+  out <- matrix(data=x, byrow=FALSE, 
+                ncol=max(1, length(t.overlap)), nrow=length(t), 
+                dimnames=list(NULL, t.overlap))
 
   # loop:
   for(j in seq_along(t.overlap)[keep]){
@@ -59,14 +61,15 @@ link <- function(x, x.new, t, t.overlap=NULL){
 
   }
 
-  # return output to console:
+  # coerce to vector or keep matrix:
   if(ncol(out)<=1L){
     if(!all(!keep) & check) message("Overlap period ", t.overlap, " used.")
     res <- as.vector(out[,1])
   }else{
-    res <- as.data.table(out)
+    res <- out
   }
 
+  # return output:
   return(res)
 
 }
