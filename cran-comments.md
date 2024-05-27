@@ -1,9 +1,9 @@
 ## Resubmission
 This is a submission of an updated package version. In this version I have:
 
-* Updated the output of two functions
-* Updated references to the new HICP Methodological Manual
-* Cleaned code for easier reference to other package functions
+* New functions `jevons()`, `carli()`, and `harmonic()` available
+* Function `aggregate()` now allows calculation of user-defined aggregates even if not all parts of an aggregate are present in the data (`settings$add.exact=FALSE`)
+* Function `aggregate()` no longer requires any weights `w0` or `wt` if the underlying `index` function does not require weights
 
 ## Test environments
 - R-hub windows-x86_64-devel (r-devel)
