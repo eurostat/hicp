@@ -187,7 +187,7 @@ hicp.data <- hicp.data[year <= year(Sys.Date())-1,]
 
 # compute all-items HICP in one aggregation step:
 hicp.own <- hicp.data[tree==TRUE, 
-                      list("laspey"=laspey(x=dec_ratio, w0=weight)), 
+                      list("laspey"=laspeyres(x=dec_ratio, w0=weight)), 
                       by="time"]
 setorderv(x=hicp.own, cols="time")
 hicp.own[, "chain_laspey" := chain(x=laspey, t=time, by=12)]
@@ -209,10 +209,10 @@ Similarly, the (unchained) price indices are also `aggregate()`d stepwise, which
 ```{r warning=FALSE, fig.width=7, fig.align="center"}
 # compute all-items HICP stepwise through all higher-levels:
 hicp.own.all <- hicp.data[is.coicop(coicop), 
-                          aggregate(x=dec_ratio, w0=weight, grp=coicop, index=laspey),
+                          aggregate(x=dec_ratio, w0=weight, grp=coicop, index=laspeyres),
                           by="time"]
 setorderv(x=hicp.own.all, cols="time")
-hicp.own.all[, "chain_laspey" := chain(x=laspey, t=time, by=12), by="grp"]
+hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="grp"]
 hicp.own.all[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015"), by="grp"]
 
 # compare all-items HICP from direct and step-wise aggregation:
