@@ -37,6 +37,11 @@ Functions \code{unchain()}, \code{chain()} and \code{rebase()} return numeric va
 Function \code{convert()} returns a named vector of the length of quarter or years available in \code{t}, where the names correspond to the years or quarters.
 }
 
+\details{
+Function \code{unchain()} sets the value of the first price reference period to \code{NA} although the value could be set to 100 (if \code{by} is not \code{NULL}) or 100 divided by the average of the year (if \code{by=NULL}). This is wanted to avoid aggregation of these values. Function \code{chain()} finally sets the values back to 100.
+
+}
+
 \seealso{
 \code{\link{aggregate}}
 }
