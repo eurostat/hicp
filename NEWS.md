@@ -1,3 +1,9 @@
+# hicp 0.5.1
+
+* Fixed a bug in the functions `jevons()`, `carli()`, and `harmonic()`, which checked the weights `w0` that were, however, not required by the function
+* Fixed a bug in the function `chain()`, which occurred when `NA`'s were present in the index where the index value was set to 100 (instead of `NA`)
+* Updated documentation and tests accordingly
+
 # hicp 0.5.0
 
 * New functions `jevons()`, `carli()`, and `harmonic()` available
