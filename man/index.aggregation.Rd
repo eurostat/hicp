@@ -45,6 +45,12 @@ aggregate(x, w0, wt, grp, index=laspeyres, add=list(), settings=list())
   }}
 }
 
+\details{
+The price indices currently available use price relatives \code{x}. The Dutot index is therefore not implemented.
+
+The functions \code{jevons()}, \code{carli()}, and \code{harmonic()} do not make use of any weights in the calculations. However, they are implemented in a way such that the weights \code{w0} are considered, that is, elements in \code{x} where the weight \code{w0} is \code{NA} are excluded from the calculations. This mimics the behaviour of the weighted index functions like \code{laspeyres()} and can be useful in situations where indices are present but the weight is missing. If, for example, subindices are newly introduced, the index in December is usually set to 100 while the weight of this subindex is not available. The subindex's value in December can thus be excluded by using the weights \code{w0} also in the unweighted price indices.
+}
+
 \value{
 Functions \code{jevons()}, \code{carli()}, \code{harmonic()}, \code{laspeyres()}, \code{paasche()}, \code{fisher()}, \code{toernqvist()}, and \code{walsh()} return a single (aggregated) value.
 

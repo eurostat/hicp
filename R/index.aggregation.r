@@ -2,49 +2,79 @@
 
 # Title:  Index number methods and aggregation
 # Author: Sebastian Weinand
-# Date:   27 May 2024
+# Date:   28 May 2024
 
 # bilateral index functions:
 jevons <- function(x, w0=NULL, wt=NULL){
   
   # input checks:
   check.num(x=x, int=c(0,Inf))
-  check.num(x=w0, int=c(0,Inf))
-  check.lengths(x=x, y=w0)
+  check.num(x=w0, int=c(0,Inf), null.ok=TRUE)
   
-  if(all(is.na(x))){
-    P <- NA_real_
+  # compute index:
+  if(any(stats::complete.cases(x, w0))){
+    if(is.null(w0)){
+      # use all available elements in x:
+      P <- exp(mean(log(x), na.rm=TRUE))
+    }else{
+      # drop elements in x where the corresponding weight is NA:
+      P <- exp(mean(log(x[!is.na(w0)]), na.rm=TRUE))
+    }
   }else{
-    P <- exp(mean(log(x), na.rm=TRUE))
+    # avoid NaN in case no complete observations are present:
+    P <- NA_real_
   }
+  
+  # return output:
+  return(P)
   
 }
 carli <- function(x, w0=NULL, wt=NULL){
   
   # input checks:
   check.num(x=x, int=c(0,Inf))
-  check.num(x=w0, int=c(0,Inf))
-  check.lengths(x=x, y=w0)
+  check.num(x=w0, int=c(0,Inf), null.ok=TRUE)
   
-  if(all(is.na(x))){
-    P <- NA_real_
+  # compute index:
+  if(any(stats::complete.cases(x, w0))){
+    if(is.null(w0)){
+      # use all available elements in x:
+      P <- mean(x, na.rm=TRUE)
+    }else{
+      # drop elements in x where the corresponding weight is NA:
+      P <- mean(x[!is.na(w0)], na.rm=TRUE)
+    }
   }else{
-    P <- mean(x, na.rm=TRUE)
+    # avoid NaN in case no complete observations are present:
+    P <- NA_real_
   }
   
+  # return output:
+  return(P)
+
 }
 harmonic <- function(x, w0=NULL, wt=NULL){
   
   # input checks:
   check.num(x=x, int=c(0,Inf))
-  check.num(x=w0, int=c(0,Inf))
-  check.lengths(x=x, y=w0)
+  check.num(x=w0, int=c(0,Inf), null.ok=TRUE)
   
-  if(all(is.na(x))){
-    P <- NA_real_
+  # compute index:
+  if(any(stats::complete.cases(x, w0))){
+    if(is.null(w0)){
+      # use all available elements in x:
+      P <- 1/mean(1/x, na.rm=TRUE)
+    }else{
+      # drop elements in x where the corresponding weight is NA:
+      P <- 1/mean(1/x[!is.na(w0)], na.rm=TRUE)
+    }
   }else{
-    P <- 1/mean(1/x, na.rm=TRUE)
+    # avoid NaN in case no complete observations are present:
+    P <- NA_real_
   }
+  
+  # return output:
+  return(P)
   
 }
 laspeyres <- function(x, w0, wt=NULL){
@@ -54,28 +84,31 @@ laspeyres <- function(x, w0, wt=NULL){
   check.num(x=w0, int=c(0,Inf))
   check.lengths(x=x, y=w0)
 
-  if(missing(w0) || all(is.na(w0) | is.na(x))){
-
-    # set to NA:
-    P <- NA_real_
-
-  }else{
-
+  # compute index:
+  if(any(stats::complete.cases(x, w0))){
+    
     # set weights to NA if index is NA:
     w0_laspey <- ifelse(is.na(x), NA, w0)
     # if index is NA, no computation is possible.
     # however, dropping specific weights implies
     # re-normalizing the remaining weights.
-
+    
     # renormalize weights:
     w0_laspey <- w0_laspey/sum(w0_laspey, na.rm=TRUE)
-
+    
     # compute index:
     P <- sum(x*w0_laspey, na.rm=TRUE)
     # see Ilo et al. (2004), p. 265, formula (15.8)
-
+    
+  }else{
+    
+    # set to NA as otherwise sum(NA, na.rm=TRUE)
+    # will return 0:
+    P <- NA_real_
+    
   }
-
+  
+  # return output:
   return(P)
 
 }
@@ -86,28 +119,31 @@ paasche <- function(x, w0=NULL, wt){
   check.num(x=wt, int=c(0,Inf))
   check.lengths(x=x, y=wt)
 
-  if(missing(wt) || all(is.na(wt) | is.na(x))){
-
-    # set to NA:
-    P <- NA_real_
-
-  }else{
-
+  # compute index:
+  if(any(stats::complete.cases(x, wt))){
+    
     # set weights to NA if index is NA:
     wt_paasche <- ifelse(is.na(x), NA, wt)
     # if index is NA, no computation is possible.
     # however, dropping specific weights implies
     # re-normalizing the remaining weights.
-
+    
     # renormalize weights:
     wt_paasche <- wt_paasche/sum(wt_paasche, na.rm=TRUE)
-
+    
     # compute index:
     P <- 1/sum((x^(-1))*wt_paasche, na.rm=TRUE)
     # see Ilo et al. (2004), p. 266, formula (15.9)
-
+    
+  }else{
+    
+    # set to NA as otherwise sum(NA, na.rm=TRUE)
+    # will return 0:
+    P <- NA_real_
+    
   }
 
+  # return output:
   return(P)
 
 }
@@ -120,19 +156,22 @@ fisher <- function(x, w0, wt){
   check.lengths(x=x, y=w0)
   check.lengths(x=x, y=wt)
 
-  if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
-
-    # set to NA:
-    P <- NA_real_
-
-  }else{
-
+  # compute index:
+  if(any(stats::complete.cases(x, w0, wt))){
+    
     # compute index:
     P <- sqrt(laspeyres(x=x, w0=w0)*paasche(x=x, wt=wt))
     # see Ilo et al. (2004), p. 267, formula (15.12)
-
+    
+  }else{
+    
+    # set to NA as otherwise sum(NA, na.rm=TRUE)
+    # will return 0:
+    P <- NA_real_
+    
   }
 
+  # return output:
   return(P)
 
 }
@@ -145,13 +184,9 @@ toernqvist <- function(x, w0, wt){
   check.lengths(x=x, y=w0)
   check.lengths(x=x, y=wt)
 
-  if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
-
-    # set to NA:
-    P <- NA_real_
-
-  }else{
-
+  # compute index:
+  if(any(stats::complete.cases(x, w0, wt))){
+    
     # set weights to NA if index value is NA:
     w0_sup <- ifelse(is.na(x), NA, w0)
     wt_sup <- ifelse(is.na(x), NA, wt)
@@ -159,17 +194,24 @@ toernqvist <- function(x, w0, wt){
     # if index value is NA. Fisher index is simply the
     # geometric average of Paasche and Laspeyres. For
     # Toernqvist and Walsh we adopt this logic.
-
+    
     # renormalize weights:
     w0_sup <- w0_sup/sum(w0_sup, na.rm = TRUE)
     wt_sup <- wt_sup/sum(wt_sup, na.rm = TRUE)
-
+    
     # compute index:
     P <- prod(x^((w0_sup+wt_sup)/2), na.rm = TRUE)
     # see Ilo et al. (2004), p. 283, formula (15.81)
-
+    
+  }else{
+    
+    # set to NA as otherwise sum(NA, na.rm=TRUE)
+    # will return 0:
+    P <- NA_real_
+    
   }
 
+  # return output:
   return(P)
 
 }
@@ -182,13 +224,9 @@ walsh <- function(x, w0, wt){
   check.lengths(x=x, y=w0)
   check.lengths(x=x, y=wt)
 
-  if(missing(w0) || missing(wt) || all(is.na(w0) | is.na(wt) | is.na(x))){
-
-    # set to NA:
-    P <- NA_real_
-
-  }else{
-
+  # compute index:
+  if(any(stats::complete.cases(x, w0, wt))){
+    
     # set weights to NA if index value is NA:
     w0_sup <- ifelse(is.na(x), NA, w0)
     wt_sup <- ifelse(is.na(x), NA, wt)
@@ -196,17 +234,24 @@ walsh <- function(x, w0, wt){
     # if index value is NA. Fisher index is simply the
     # geometric average of Paasche and Laspeyres. For
     # Toernqvist and Walsh we adopt this logic.
-
+    
     # renormalize weights:
     w0_sup <- w0_sup/sum(w0_sup, na.rm = TRUE)
     wt_sup <- wt_sup/sum(wt_sup, na.rm = TRUE)
-
+    
     # compute index:
     P <- sum(sqrt(x)*sqrt(w0_sup*wt_sup), na.rm = TRUE)/sum(sqrt(1/x)*sqrt(w0_sup*wt_sup), na.rm = TRUE)
     # see Ilo et al. (2004), p. 269, formula (15.21)
-
+    
+  }else{
+    
+    # set to NA as otherwise sum(NA, na.rm=TRUE)
+    # will return 0:
+    P <- NA_real_
+    
   }
-
+  
+  # return output:
   return(P)
 
 }
@@ -361,9 +406,17 @@ aggregate <- function(x, w0, wt, grp, index=laspeyres, add=list(), settings=list
     
   }
   
-  # set names and key:
+  # set weights to NA if all initial weights were NA. this
+  # is needed because sum(w0, na.rm=T) returns 0 if all w0
+  # are NA.
+  if(all(is.na(w0))) out$w0 <- NA_real_
+  if(all(is.na(wt))) out$wt <- NA_real_
+  
+  # drop weights if these were not provided by the user:
   if(w0.miss) out[, "w0":=NULL]
   if(wt.miss) out[, "wt":=NULL]
+  
+  # set names and key:
   data.table::setkeyv(x=out, cols="grp")
   
   # print output to console:
