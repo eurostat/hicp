@@ -9,7 +9,7 @@
 \author{Sebastian Weinand}
 
 \description{
-HICP data follow the COICOP classification system. However, sometimes COICOP ids are merged into bundles, deviating from the usual structure of ids (e.g. 08X, 0531_2). Function \code{is.bundle()} flags if a coicop id is a bundle or not, while \code{unbundle()} splits the bundles into their original ids. Both functions make use of the bundle dictionary \code{coicop.bundles}.
+HICP data follow the COICOP classification system. However, sometimes COICOP ids are merged into bundles, deviating from the usual structure of ids (e.g. 08X, 0531_2). Function \code{is.bundle()} flags if a COICOP id is a bundle or not, while \code{unbundle()} splits the bundles into their original ids. Both functions make use of the bundle dictionary \code{coicop.bundles}.
 }
 
 \usage{

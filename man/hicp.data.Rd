@@ -32,7 +32,7 @@ A data.table.
 }
 
 \seealso{
-restatapi: \code{\link{get_eurostat_toc}}, \code{\link{get_eurostat_dsd}}, \code{\link{get_eurostat_data}}
+\code{\link[restatapi]{get_eurostat_toc}}, \code{\link[restatapi]{get_eurostat_dsd}}, \code{\link[restatapi]{get_eurostat_data}}
 }
 
 \source{

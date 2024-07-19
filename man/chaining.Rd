@@ -47,7 +47,7 @@ Function \code{unchain()} sets the value of the first price reference period to 
 }
 
 \references{
-Eurostat (2024), \emph{Harmonised Index of Consumer Prices (HICP): Methodological Manual}, Luxembourg: Publications Office of the European Union, online available at: \url{https://ec.europa.eu/eurostat/web/products-manuals-and-guidelines/w/ks-gq-24-003}.
+European Commission, Eurostat, \emph{Harmonised Index of Consumer Prices (HICP) - Methodological Manual - 2024 edition}, Publications Office of the European Union, 2024, \url{https://data.europa.eu/doi/10.2785/055028}.
 }
 
 \examples{
