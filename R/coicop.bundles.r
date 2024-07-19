@@ -53,48 +53,4 @@ unbundle <- function(id){
 
 }
 
-# keep bundle code or its components:
-keep.bundle <- function(id){
-
-  # flag if the coicop bundle or its components should be kept,
-  # if both are present. if all components are present, they
-  # are kept, while the bundle code is dropped. otherwise, the
-  # bundle code is kept, while its components are dropped.
-
-  # input checks:
-  check.char(x=id, min.len=0, max.len=Inf)
-
-  # define output:
-  res <- rep(TRUE, length(id))
-
-  # flag bundles:
-  bdl.flag <- is.bundle(id)
-
-  # if any bundles present:
-  if(any(bdl.flag, na.rm=TRUE)){
-
-    # bundles:
-    bdls <- id[bdl.flag]
-
-    # loop over bundles:
-    for(j in seq_along(bdls)){
-
-      # unbundle bundle ids:
-      bdls.clean <- unbundle(bdls[j])
-
-      if(all(bdls.clean%in%id[!bdl.flag], na.rm=TRUE)){
-        res[id%in%bdls[j]] <- FALSE
-      }else{
-        res[id%in%bdls.clean] <- FALSE
-      }
-
-    }
-
-  }
-
-  # return output to console:
-  return(res)
-
-}
-
 # END
