@@ -11,16 +11,22 @@ Function \code{tree()} derives the COICOP tree at the lowest possible level. In 
 }
 
 \usage{
-tree(id, by=NULL, w=NULL, w.tol=1/100, max.lvl=NULL, unbundle=TRUE)
+tree(id, by=NULL, w=NULL, max.lvl=NULL, settings=list())
 }
 
 \arguments{
-  \item{id}{character vector of coicop ids}
+  \item{id}{character vector of COICOP ids}
   \item{by}{vector specifying the variable to be used for merging the tree, e.g. vector of dates for merging over time or a vector of countries for merging across space. Can be \code{NULL} if no merging is required.}
   \item{w}{numeric weight of \code{id}. If supplied, it is checked that the weight of children add up to the corresponding weight of the parent (allowing for tolerance \code{w.tol}). If \code{w=NULL} (the default), no checking of weight aggregation is performed.}
-  \item{w.tol}{numeric tolerance for checking of weights. Only relevant in case \code{w} is not \code{NULL}.}
-  \item{max.lvl}{integer specifying the maximum depth or deepest coicop level allowed. If \code{NULL}, the deepest level found in \code{id} is used.}
-  \item{unbundle}{logical indicating if coicop bundles (e.g. 08X, 0531_2) should be taken into account or not.}
+  \item{max.lvl}{integer specifying the maximum depth or deepest COICOP level allowed. If \code{NULL} (the default), the deepest level found in \code{id} is used.}
+  \item{settings}{a list of control settings to be used. The following settings are supported:
+  \itemize{
+    \item \code{coicop.version} : the COICOP version to be used when checking for valid COICOP codes. See \code{\link{coicop}} for the allowed values.  The default is \code{getOption("hicp.coicop.version")}.
+    \item \code{unbundle} : logical indicating if COICOP bundles (e.g. 08X, 0531_2) as defined in \code{\link{coicop.bundles}} should be taken into account or not. The default is \code{getOption("hicp.unbundle")}.
+    \item \code{all.items.code} : character specifying the code internally used for the all-items index. The default is taken from \code{getOption("hicp.all.items.code")}.
+    \item \code{w.tol} : numeric tolerance for checking of weights. Only relevant in case \code{w} is not \code{NULL}. The default is 1/100.
+  }
+  }
 }
 
 \value{
@@ -51,7 +57,7 @@ tree(id=c("01","011","012","0111","0112","01121"),
 
 # coicop bundles:
 tree(id=c("08","081","082_083"), w=c(0.25,0.05,0.2))
-tree(id=c("08","081","082_083"), w=c(0.25,0.05,0.2), unbundle=FALSE)
+tree(id=c("08","081","082_083"), w=c(0.25,0.05,0.2), settings=list(unbundle=FALSE))
 
 # merge (or fix) coicop tree over time:
 tree(id=c("08","081","082","08"), by=c(1,1,1,2))
@@ -72,22 +78,22 @@ coicops <- coicops[grepl("^CP", coicop),]
 coicops[, "coicop":=gsub("^CP", "", coicop)]
 
 # derive seperate trees for each time period and country:
-coicops[, "tree1" := tree(id=coicop, w=values, w.tol=0.1), by=c("geo","time")]
-coicops[tree1==TRUE,
+coicops[, "t1" := tree(id=coicop, w=values, settings=list(w.tol=0.1)), by=c("geo","time")]
+coicops[t1==TRUE,
         list("n"=uniqueN(coicop),           # varying coicops over time and space
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
 
 # derive merged trees over time, but not across countries:
-coicops[, "tree2" := tree(id=coicop, by=time, w=values, w.tol=0.1), by="geo"]
-coicops[tree2==TRUE,
+coicops[, "t2" := tree(id=coicop, by=time, w=values, settings=list(w.tol=0.1)), by="geo"]
+coicops[t2==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time in a country
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
 
 # derive merged trees over countries and time:
-coicops[, "tree3" := tree(id=coicop, by=paste(geo,time), w=values, w.tol=0.1)]
-coicops[tree3==TRUE,
+coicops[, "t3" := tree(id=coicop, by=paste(geo,time), w=values, settings=list(w.tol=0.1))]
+coicops[t3==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time and across countries
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]

@@ -29,7 +29,13 @@ knitr::opts_chunk$set(
 <br/><br/>
 The Harmonised Index of Consumer Prices (HICP) is the key economic figure to measure inflation in the euro area. The methodology underlying the HICP is documented in the HICP Methodological Manual [@Eurostat2024]. Based on this manual, the `hicp`-package provides functions for data users to work with publicly available HICP price indices and weights (*upper-level aggregation*). The following vignette highlights the main package features. It contains three sections on data access, the Classification of Consumption by Individual Purpose (COICOP) underlying the HICP, and index aggregation.   
 ```{r setup, message=FALSE}
-library(hicp) # load package
+# load package:
+library(hicp)
+
+# set global options:
+options(hicp.coicop.version="ecoicop-hicp") # the coicop version to be used
+options(hicp.unbundle=TRUE) # treatment of coicop bundle codes like 08X
+options(hicp.all.items.code="00") # internal code for the all-items index
 ```
 
 # HICP data
@@ -77,11 +83,11 @@ The object `dt` contains the item weights for the euro area since 2015. If one w
 
 # HICP and COICOP
 
-HICP item weights and price indices are classified according to COICOP. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, COICOP and thus also the HICP follows a pre-defined hierarchical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
+HICP item weights and price indices are classified according to the European COICOP (ECOICOP-HICP). This COICOP version is used by default (`options(hicp.coicop.version="ecoicop-hicp")`) but others are available in the package as well. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, ECOICOP and thus also the HICP follows a pre-defined hierarchical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
 
 ## COICOP codes, bundles, and relatives
 
-**COICOP codes and bundles.** The [COICOP codes underlying the HICP](https://showvoc.op.europa.eu/#/datasets/ESTAT_European_Classification_of_Individual_Consumption_according_to_Purpose_%28ECOICOP%29/data) consist of numbers. The code of the all-items HICP is `00`, while the codes of the twelve divisions below start with `01, 02,..., 12`. At the lowest level of subclasses, the codes consist of 5 digits. Using function `is.coicop()`, it can be easily checked if a code is a valid COICOP code or not. This includes bundle codes like `082_083`, which violate the standard COICOP code pattern, but can be found in HICP data. Bundle codes can be generally detected using `is.bundle()` and be unbundled using function `unbundle()`.
+**COICOP codes and bundles.** The COICOP codes underlying the HICP ([ECOICOP](https://op.europa.eu/de/web/eu-vocabularies/dataset/-/resource?uri=http://publications.europa.eu/resource/dataset/ecoicop-hicp)) consist of numbers. The code `00` is used in this package for the all-items HICP although it is no official COICOP code (see `options(hicp.all.items.code="00")`). The codes of the twelve divisions below start with `01, 02,..., 12`. At the lowest level of subclasses, the codes consist of 5 digits. Using the function `is.coicop()`, it can be easily checked if a code is a valid COICOP code or not. This includes bundle codes like `082_083`, which violate the standard COICOP code pattern, but can be found in HICP data. Bundle codes can be generally detected using `is.bundle()` and be unbundled using function `unbundle()`.
 ```{r warning=FALSE}
 # example codes:
 ids <- c("00","CP00","13","08X")
@@ -92,11 +98,16 @@ is.bundle(id=ids)
 # unbundle any bundle codes into their components:
 unbundle(id=ids)
 
-# check if valid COICOP code including bundle codes:
-is.coicop(id=ids, unbundle=TRUE)
+# check if valid ECOICOP code including bundle codes:
+is.coicop(id=ids, settings=list(unbundle=TRUE))
 
-# check if valid COICOP code excluding bundle codes:
-is.coicop(id=ids, unbundle=FALSE)
+# check if valid ECOICOP code excluding bundle codes:
+is.coicop(id=ids, settings=list(unbundle=FALSE))
+
+# games of chance have a valid ECOICOP code:
+is.coicop("0943", settings=list(coicop.version="ecoicop"))
+# but not in the ECOICOP-HICP:
+is.coicop("0943", settings=list(coicop.version="ecoicop-hicp"))
 ```
 
 **COICOP relatives.** COICOP codes available in the data downloaded from Eurostat's database should be generally valid (except for the prefix "CP"). More relevant is thus the detection of children and parent codes in the data. Children are those codes that belong to the same higher-level code (or parent). Such relations can be direct (e.g., `01->011`) or indirect (e.g., `01->0111`). It is important to note that children exhibit exactly one parent, while a parent may contain multiple children. This can be seen in the example below.
@@ -126,27 +137,27 @@ item.weights <- item.weights[grepl("^CP", coicop),]
 item.weights[, "coicop":=gsub(pattern="^CP", replacement="", x=coicop)]
 
 # derive separate trees for each time period and country:
-item.weights[, "tree1" := tree(id=coicop, w=values, w.tol=0.1), by=c("geo","time")]
-item.weights[tree1==TRUE,
+item.weights[, "t1" := tree(id=coicop, w=values, settings=list(w.tol=0.1)), by=c("geo","time")]
+item.weights[t1==TRUE,
         list("n"=uniqueN(coicop),           # varying coicops over time and space
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
 
 # derive merged trees over time, but not across countries:
-item.weights[, "tree2" := tree(id=coicop, by=time, w=values, w.tol=0.1), by="geo"]
-item.weights[tree2==TRUE,
+item.weights[, "t2" := tree(id=coicop, by=time, w=values, settings=list(w.tol=0.1)), by="geo"]
+item.weights[t2==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time in a country
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
 
 # derive merged trees over countries and time:
-item.weights[, "tree3" := tree(id=coicop, by=paste(geo,time), w=values, w.tol=0.1)]
-item.weights[tree3==TRUE,
+item.weights[, "t3" := tree(id=coicop, by=paste(geo,time), w=values, settings=list(w.tol=0.1))]
+item.weights[t3==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time and across countries
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
         by=c("geo","time")]
 ```
-All three COICOP trees in the example above can be used to aggregate the all-items HICP in a single aggregation step as the item weights add up to 1000, respectively. While the selection of COICOP codes varies over time and across countries for `tree1`, it is the same over time and across countries for `tree3`.
+All three COICOP trees in the example above can be used to aggregate the all-items HICP in a single aggregation step as the item weights add up to 1000, respectively. While the selection of COICOP codes varies over time and across countries for `t1`, it is the same over time and across countries for `t3`.
 
 # Index aggregation, rates of change, and contributions
 
@@ -156,7 +167,7 @@ The HICP is a chain-linked Laspeyres-type index [@EU2016]. The (unchained) price
 
 The all-items index is a weighted average of the items' subindices. However, because the HICP is a chain index, the subindices can not simply be aggregated. They first need to be unchained, i.e., expressed relative to December of the previous year. These unchained indices can then be aggregated as a weighted average. Since the Laspeyres-type index is *consistent in aggregation*, the aggregation can be done stepwise from the bottom level to the top or directly in one step.
 
-In the following example, the euro area HICP is computed directly in one step and also stepwise through all higher-level indices. For that purpose, the monthly price indices and item weights are first downloaded from Eurostat's database. The two datasets are then merged. Second, the price indices are unchained using the function `unchain()`. Based on the derived COICOP tree, the unchained price indices are aggregated in one step using the Laspeyres-type index, `chain()`ed, and finally `rebase()`d to the index reference period 2015. A comparison to the published all-items index values shows only small differences due to rounding (since the published index numbers in Eurostat's database are rounded and not available with all decimals).
+In the following example, the euro area HICP is computed directly in one step and also stepwise through all higher-level indices. For that purpose, the monthly price indices and item weights are first downloaded from Eurostat's database. The two datasets are then merged. Second, the price indices are unchained using the function `unchain()`. Based on the derived ECOICOP tree, the unchained price indices are aggregated in one step using the Laspeyres-type index, `chain()`ed, and finally `rebase()`d to the index reference period 2015. A comparison to the published all-items index values shows only small differences due to rounding (since the published index numbers in Eurostat's database are rounded and not available with all decimals).
 ```{r warning=FALSE, fig.width=7, fig.align="center"}
 # load data.table-package:
 require(data.table)
@@ -179,7 +190,7 @@ inw[, "time":=as.integer(time)]
 setnames(x=inw, old=c("time","values"), new=c("year","weight"))
 
 # derive coicop tree:
-inw[ , "tree":=tree(id=coicop, w=weight, w.tol=0.1), by=c("geo","year")]
+inw[ , "tree":=tree(id=coicop, w=weight, settings=list(w.tol=0.1)), by=c("geo","year")]
 
 # merge price indices and item weights:
 hicp.data <- merge(x=prc, y=inw, by=c("geo","coicop","year"), all.x=TRUE)

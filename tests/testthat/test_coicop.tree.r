@@ -133,7 +133,7 @@ expect_equal(
 )
 
 expect_equal(
-  tree(id=c("053","0531","0531_0532"), unbundle=FALSE),
+  tree(id=c("053","0531","0531_0532"), settings=list(unbundle=FALSE)),
   c(F,T,F)
 )
 
@@ -219,12 +219,12 @@ expect_equal(
 )
 
 expect_equal(
-  tree(id=id, by=t, unbundle=FALSE),
+  tree(id=id, by=t, settings=list(unbundle=FALSE)),
   c(F,T,F,F, F,T,F,F,F,F)
 )
 
 expect_equal(
-  tree(id=id, by=t, w=w, unbundle=FALSE),
+  tree(id=id, by=t, w=w, settings=list(unbundle=FALSE)),
   c(F,T,F,F, F,T,F,F,F,F)
 )
 
@@ -243,7 +243,7 @@ expect_equal(
 )
 
 expect_equal(
-  tree(id=id, by=t, w=w, unbundle=FALSE),
+  tree(id=id, by=t, w=w, settings=list(unbundle=FALSE)),
   c(F,F,T,T,T,F, F,F,T,T,T,F)
 )
 

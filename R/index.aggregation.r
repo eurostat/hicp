@@ -2,7 +2,7 @@
 
 # Title:  Index number methods and aggregation
 # Author: Sebastian Weinand
-# Date:   28 May 2024
+# Date:   19 July 2024
 
 # bilateral index functions:
 jevons <- function(x, w0=NULL, wt=NULL){
@@ -256,29 +256,57 @@ walsh <- function(x, w0, wt){
 
 }
 
+# non-exported helper function to keep
+# bundle code or its components:
+keep.bundle <- function(id){
+  
+  # flag if the coicop bundle or its components should be kept,
+  # if both are present. if all components are present, they
+  # are kept, while the bundle code is dropped. otherwise, the
+  # bundle code is kept, while its components are dropped.
+  
+  # define output:
+  res <- rep(TRUE, length(id))
+  
+  # flag bundles:
+  bdl.flag <- hicp::is.bundle(id)
+  
+  # if any bundles present:
+  if(any(bdl.flag, na.rm=TRUE)){
+    
+    # bundles:
+    bdls <- id[bdl.flag]
+    
+    # loop over bundles:
+    for(j in seq_along(bdls)){
+      
+      # unbundle bundle ids:
+      bdls.clean <- hicp::unbundle(bdls[j])
+      
+      if(all(bdls.clean%in%id[!bdl.flag], na.rm=TRUE)){
+        res[id%in%bdls[j]] <- FALSE
+      }else{
+        res[id%in%bdls.clean] <- FALSE
+      }
+      
+    }
+    
+  }
+  
+  # return output to console:
+  return(res)
+  
+}
+
 # index aggregation:
 aggregate <- function(x, w0, wt, grp, index=laspeyres, add=list(), settings=list()){
-  
-  # @Args:
-  # x             unchained index series, i.e. unchain(x, t)
-  # w0            weights used in the current period
-  # wt            weights from a period t+1
-  # grp           the grouping variable, should be coicop codes
-  #               defined by [0-9]{1,5}
-  # index         a function or named list of functions specifiyng
-  #               the index type, e.g. laspey() for the laspeyres index.
-  #               each function must have arguments x, w0 and wt, even if
-  #               the arguments w0 and wt are not used
-  # add           named list of ids that can be found in grp, which are
-  #               aggregated
-  # keep.lowest   keep the lowest level indices that form
-  #               the base of all aggregation steps
-  # add.exact     aggregate ids in add only if all are present or using 
-  #               the available ones
   
   # set defaults:
   if(is.null(settings$keep.lowest)) settings$keep.lowest <- TRUE
   if(is.null(settings$add.exact)) settings$add.exact <- TRUE
+  if(is.null(settings$coicop.version)) settings$coicop.version <- getOption("hicp.coicop.version")
+  if(is.null(settings$unbundle)) settings$unbundle <- getOption("hicp.unbundle")
+  if(is.null(settings$all.items.code)) settings$all.items.code <- getOption("hicp.all.items.code")
   
   # input checks:
   check.num(x=x, int=c(0,Inf))
@@ -288,11 +316,14 @@ aggregate <- function(x, w0, wt, grp, index=laspeyres, add=list(), settings=list
   check.lengths(x=x, y=grp)
   check.log(x=settings$keep.lowest, min.len=1, max.len=1, na.ok=FALSE)
   check.log(x=settings$add.exact, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=settings$unbundle, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$coicop.version, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$all.items.code, min.len=1, max.len=1, na.ok=FALSE)
   if(!is.list(add)) stop("Non-valid input for add -> only lists allowed")
   
   # input checks on both "w0" and "wt:
-  if(missing(w0)){w0.miss <- TRUE; w0 <- rep(NA_real_, length(x))}else{w0.miss <- FALSE}
-  if(missing(wt)){wt.miss <- TRUE; wt <- rep(NA_real_, length(x))}else{wt.miss <- FALSE}
+  if(missing(w0)){w0.miss <- TRUE; w0 <- rep(0, length(x))}else{w0.miss <- FALSE}
+  if(missing(wt)){wt.miss <- TRUE; wt <- rep(0, length(x))}else{wt.miss <- FALSE}
   check.lengths(x=x, y=w0)
   check.lengths(x=x, y=wt)
   
@@ -311,9 +342,13 @@ aggregate <- function(x, w0, wt, grp, index=laspeyres, add=list(), settings=list
     stop("Non-valid input for w0 or wt -> weights required for at least one of the functions in 'index'")
   }
   
+  # set all-items code:
+  allid <- settings$all.items.code
+  
   # gather data:
   dt <- data.table::data.table(grp, w0, wt, x)
-  dt <- dt[grp!="00",]
+  dt <- dt[grp!=allid,] # drop index totals
+  dt <- dt[hicp::is.coicop(id=grp, settings=settings)] # drop non-valid coicop codes
   if(!all(is.na(dt$x))) dt <- dt[!is.na(x), ] # drop these NAs because they would bias aggregation
   dt[, names(index) := x]
   dt[, "x":=NULL]
@@ -342,7 +377,7 @@ aggregate <- function(x, w0, wt, grp, index=laspeyres, add=list(), settings=list
     
     # set coicop parents:
     dt.agg[, "parent" := substr(x=grp, start=1, stop=nchar(grp)-1)]
-    dt.agg[nchar(grp)==2, "parent" := "00"]
+    dt.agg[nchar(grp)==2, "parent" := allid]
     
     # aggregate to next level:
     res <- dt.agg[nchar(grp)==i, c(

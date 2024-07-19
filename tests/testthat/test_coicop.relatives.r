@@ -4,19 +4,20 @@
 # Function is.coicop() ----------------------------------------------------
 
 
-expect_true(all(is.coicop(c("00","01","011","0123","01234"))))
-expect_false(all(is.coicop(c("13","123456","120"))))
-expect_true(is.coicop("08X", unbundle=TRUE))
-expect_false(is.coicop("08X", unbundle=FALSE))
+expect_true(all(is.coicop(c("01","011","0111","01111"))))
+expect_false(all(is.coicop(c("01","011","0111","01111","0943"))))
+expect_true(all(is.coicop(c("01","011","0111","01111","0943"), settings=list(coicop.version="ecoicop"))))
+expect_true(is.coicop("08X", settings=list(unbundle=TRUE)))
+expect_false(is.coicop("08X", settings=list(unbundle=FALSE)))
 
 
 # Function level() --------------------------------------------------------
 
 
-expect_equal(level(id=c("00","01","011","0123","01234")), 1:5)
-expect_equal(level(id=c("13","123456","120")), rep(NA_integer_, 3))
-expect_equal(level(id="08X", unbundle=TRUE), 3L)
-expect_equal(level(id="08X", unbundle=FALSE), NA_integer_)
+expect_equal(level(id=c("00","01","011","0111","01111","0943")), c(1:5,NA))
+expect_equal(level(id=c("00","01","011","0111","01111","0943"), settings=list(coicop.version="ecoicop")), c(1:5,4))
+expect_equal(level(id="08X", settings=list(unbundle=TRUE)), 3L)
+expect_equal(level(id="08X", settings=list(unbundle=FALSE)), NA_integer_)
 
 
 # Function parent() ------------------------------------------------------
@@ -44,6 +45,10 @@ expect_equal(parent(id=c("00","0111"), flag=T, direct=F), c(F,T))
 expect_equal(parent(id=c("00","0111"), flag=T, direct=T), c(F,F))
 expect_equal(parent(id=c("00","99"), direct=T, flag=T), c(F,NA))
 
+# flag according to different coicop versions:
+expect_equal(parent(c("094","0943","09430"), settings=list(coicop.version="ecoicop")), c(F,T,T))
+expect_equal(parent(c("094","0943","09430"), settings=list(coicop.version="ecoicop-hicp")), c(F,NA,NA))
+
 # input including bundle codes:
 id <- c("08","081","08X","08201","05","053","0531_2","0531","05311")
 
@@ -52,36 +57,36 @@ id <- c("08","081","08X","08201","05","053","0531_2","0531","05311")
 # parent, adjustment is needed. parent of bundle code is
 # well defined
 expect_equal(
-  parent(id, unbundle=T, direct=F, flag=F),
+  parent(id, direct=F, flag=F, settings=list(unbundle=T)),
   c(NA,"08","08","08X",NA,"05","053","053","0531"))
 
 expect_equal(
-  parent(id, unbundle=F, direct=F, flag=F),
+  parent(id, direct=F, flag=F, settings=list(unbundle=F)),
   c(NA,"08",NA,"08",NA,"05",NA,"053","0531"))
 
 expect_equal(
-  parent(id, unbundle=T, direct=T, flag=F),
+  parent(id, direct=T, flag=F, settings=list(unbundle=T)),
   c(NA,"08","08",NA,NA,"05","053","053","0531"))
 
 expect_equal(
-  parent(id, unbundle=F, direct=T, flag=F),
+  parent(id, direct=T, flag=F, settings=list(unbundle=F)),
   c(NA,"08",NA,NA,NA,"05",NA,"053","0531"))
 
 # check function output for flag=TRUE:
 expect_equal(
-  parent(id=id, flag=T, direct=T, unbundle=T),
+  parent(id=id, flag=T, direct=T, settings=list(unbundle=T)),
   c(F,T,T,F,F,T,T,T,T))
 
 expect_equal(
-  parent(id=id, flag=T, direct=T, unbundle=F),
+  parent(id=id, flag=T, direct=T, settings=list(unbundle=F)),
   c(F,T,NA,F,F,T,NA,T,T))
 
 expect_equal(
-  parent(id=id, flag=T, direct=F, unbundle=T),
+  parent(id=id, flag=T, direct=F, settings=list(unbundle=T)),
   c(F,T,T,T,F,T,T,T,T))
 
 expect_equal(
-  parent(id=id, flag=T, direct=F, unbundle=F),
+  parent(id=id, flag=T, direct=F, settings=list(unbundle=F)),
   c(F,T,NA,T,F,T,NA,T,T))
 
 
@@ -110,41 +115,45 @@ expect_equal(child(id=c("00","0111"), flag=T, direct=F), c(T,F))
 expect_equal(child(id=c("00","0111"), flag=T, direct=T), c(F,F))
 expect_equal(child(id=c("00","99"), direct=T, flag=T), c(F,NA))
 
+# flag according to different coicop versions:
+expect_equal(child(c("094","0943","09430"), settings=list(coicop.version="ecoicop")), c(T,T,F))
+expect_equal(child(c("094","0943","09430"), settings=list(coicop.version="ecoicop-hicp")), c(F,NA,NA))
+
 # input including bundle codes:
 id <- c("08","081","08X","08201","05","053","0531_2","0531","05311")
 
 # check function output for flag=F:
 expect_equal(
-  child(id=id, flag=F, direct=T, unbundle=T),
+  child(id=id, flag=F, direct=T, settings=list(unbundle=T)),
   list(c("081","08X"), character(), character(), character(), "053", c("0531_2", "0531"), "05311", "05311", character()))
 
 expect_equal(
-  child(id=id, flag=F, direct=T, unbundle=F),
+  child(id=id, flag=F, direct=T, settings=list(unbundle=F)),
   list("081", character(), NA_character_, character(), "053", "0531", NA_character_, "05311", character()))
 
 expect_equal(
-  child(id=id, flag=F, direct=F, unbundle=T),
+  child(id=id, flag=F, direct=F, settings=list(unbundle=T)),
   list(c("081","08X","08201"), character(), "08201", character(), c("053","0531_2","0531","05311"), c("0531_2","0531","05311"), "05311", "05311", character()))
 
 expect_equal(
-  child(id=id, flag=F, direct=F, unbundle=F),
+  child(id=id, flag=F, direct=F, settings=list(unbundle=F)),
   list(c("081","08201"), character(), NA_character_, character(), c("053","0531","05311"), c("0531","05311"), NA_character_, "05311", character()))
 
 # check function output for flag=T:
 expect_equal(
-  child(id=id, flag=T, direct=T, unbundle=T),
+  child(id=id, flag=T, direct=T, settings=list(unbundle=T)),
   c(T,F,F,F,T,T,T,T,F))
 
 expect_equal(
-  child(id=id, flag=T, direct=T, unbundle=F),
+  child(id=id, flag=T, direct=T,settings=list( unbundle=F)),
   c(T,F,NA,F,T,T,NA,T,F))
 
 expect_equal(
-  child(id=id, flag=T, direct=F, unbundle=T),
+  child(id=id, flag=T, direct=F, settings=list(unbundle=T)),
   c(T,F,T,F,T,T,T,T,F))
 
 expect_equal(
-  child(id=id, flag=T, direct=F, unbundle=F),
+  child(id=id, flag=T, direct=F, settings=list(unbundle=F)),
   c(T,F,NA,F,T,T,NA,T,F))
 
 # END
