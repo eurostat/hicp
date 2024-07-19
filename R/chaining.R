@@ -110,7 +110,7 @@ chain <- function(x, t, by=12){
   x.chained <- 100*as.vector(x*x.ref.cum.shifted)
   
   # set index start value to 100:
-  x.chained[y%in%y.base & m==by] <- 100
+  x.chained[y%in%y.base & m==by & is.na(x.chained)] <- 100
   
   # print unchained values:
   return(x.chained)
