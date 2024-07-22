@@ -33,7 +33,7 @@ aggregate(x, w0, wt, grp, index=laspeyres, add=list(), settings=list())
 }
 
 \arguments{
-  \item{x}{numeric vector of price relatives obtained by \code{unchain()}ing some HICP index series.}
+  \item{x}{numeric vector of price relatives obtained by unchaining some HICP index series.}
   \item{w0, wt}{numeric vector of weights in the base period \code{w0} (e.g., for the Laspeyres index) or current period \code{wt} (e.g., for the Paasche index), respectively.}
   \item{grp}{grouping variable to be used. These must be valid COICOP codes according to \code{is.coicop()}.}
   \item{index}{a function or named list of functions specifying the index formula used for aggregation. Each function must have arguments \code{x}, \code{w0} and \code{wt}, even if \code{w0} and/or \code{wt} are not used (this can be indicated by setting this argument to \code{NULL}). Each function must return a scalar. The default is \code{index=laspeyres} since the HICP is calculated as a Laspeyres-type index.}
@@ -51,7 +51,7 @@ aggregate(x, w0, wt, grp, index=laspeyres, add=list(), settings=list())
 \details{
 The price indices currently available use price relatives \code{x}. The Dutot index is therefore not implemented.
 
-The functions \code{jevons()}, \code{carli()}, and \code{harmonic()} do not make use of any weights in the calculations. However, they are implemented in a way such that the weights \code{w0} are considered, that is, elements in \code{x} where the weight \code{w0} is \code{NA} are excluded from the calculations. This mimics the behaviour of the weighted index functions like \code{laspeyres()} and can be useful in situations where indices are present but the weight is missing. If, for example, subindices are newly introduced, the index in December is usually set to 100 while the weight of this subindex is not available. The subindex's value in December can thus be excluded by using the weights \code{w0} also in the unweighted price indices.
+The functions \code{jevons()}, \code{carli()}, and \code{harmonic()} do not make use of any weights in the calculations. However, they are implemented in a way such that the weights \code{w0} are considered, that is, elements in \code{x} where the weight \code{w0} is \code{NA} are excluded from the calculations. This mimics the behavior of the weighted index functions like \code{laspeyres()} and can be useful in situations where indices are present but the weight is missing. If, for example, subindices are newly introduced, the index in December is usually set to 100 while the weight of this subindex is not available. The subindex's value in December can thus be excluded by using the weights \code{w0} also in the unweighted price indices.
 }
 
 \value{
@@ -59,10 +59,10 @@ Functions \code{jevons()}, \code{carli()}, \code{harmonic()}, \code{laspeyres()}
 
 Function \code{aggregate()} returns a \code{data.table} of aggregated values at each \code{grp}-level with the following variables:
 \tabular{rlll}{
-\tab grp \tab \emph{character} \tab the grouping variable \cr
-\tab is_aggregated  \tab \emph{logical} \tab is the value an aggregate (\code{TRUE}) or not (\code{FALSE}); column available if \code{settings$keep.lowest=TRUE} \cr
-\tab w0, wt  \tab \emph{numeric} \tab sum of weights \code{w0} and \code{wt}; columns available if weights were provided \cr
-\tab index  \tab \emph{numeric} \tab aggregates for each \code{index} function
+\tab \code{grp} \tab \emph{character} \tab the grouping variable \cr
+\tab \code{is_aggregated}  \tab \emph{logical} \tab is the value an aggregate (\code{TRUE}) or not (\code{FALSE}); column available if \code{settings$keep.lowest=TRUE} \cr
+\tab \code{w0, wt}  \tab \emph{numeric} \tab sum of weights \code{w0} and \code{wt}; columns available if weights were provided \cr
+\tab \code{index}  \tab \emph{numeric} \tab aggregates for each \code{index} function
 }
 }
 

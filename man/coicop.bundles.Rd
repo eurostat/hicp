@@ -22,7 +22,7 @@ coicop.bundles
 }
 
 \arguments{
-  \item{id}{character vector of coicop ids.}
+  \item{id}{character vector of COICOP ids.}
 }
 
 \value{
