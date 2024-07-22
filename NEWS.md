@@ -1,3 +1,7 @@
+# hicp 0.6.1
+
+* Fixed a bug in the creation of the vignette on the `r-release-windows-x86_64`-flavor
+
 # hicp 0.6.0
 
 * Introduced the global options `options("hicp.unbundle"=TRUE)`, `options(hicp.coicop.version="ecoicop-hicp")`, `options(hicp.all.items.code="00")`

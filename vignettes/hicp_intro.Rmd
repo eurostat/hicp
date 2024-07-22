@@ -32,10 +32,13 @@ The Harmonised Index of Consumer Prices (HICP) is the key economic figure to mea
 # load package:
 library(hicp)
 
+# load additional packages:
+library(data.table)
+
 # set global options:
-options(hicp.coicop.version="ecoicop-hicp") # the coicop version to be used
-options(hicp.unbundle=TRUE) # treatment of coicop bundle codes like 08X
-options(hicp.all.items.code="00") # internal code for the all-items index
+options(hicp.coicop.version="ecoicop-hicp")   # the coicop version to be used
+options(hicp.unbundle=TRUE)                   # treatment of coicop bundle codes like 08X
+options(hicp.all.items.code="00")             # internal code for the all-items index
 ```
 
 # HICP data
@@ -129,9 +132,6 @@ child(id=ids, flag=FALSE, direct=FALSE)
 
 The functions `child()` and `parents()` may be useful for various reasons. To derive the composition of COICOP codes at the lowest possible level, however, the function `tree()` is better suited. For the HICP, the derivation of this composition can be done separately for each reporting month and country. Consequently, the selection of COICOP codes may differ across space and time. If needed, however, specifying argument `by` in function `tree()` allows to merge the composition of COICOP codes at the lowest possible level, e.g., to obtain a unique selection of the same COICOP codes over time. Because the derivation of COICOP codes searches in the whole COICOP tree, the resulting composition of COICOP codes is also denoted as the *COICOP tree* in this package. 
 ```{r warning=FALSE}
-# load data.table-package:
-require(data.table)
-
 # subset and adjust item weights table:
 item.weights <- item.weights[grepl("^CP", coicop),]
 item.weights[, "coicop":=gsub(pattern="^CP", replacement="", x=coicop)]
@@ -169,9 +169,6 @@ The all-items index is a weighted average of the items' subindices. However, bec
 
 In the following example, the euro area HICP is computed directly in one step and also stepwise through all higher-level indices. For that purpose, the monthly price indices and item weights are first downloaded from Eurostat's database. The two datasets are then merged. Second, the price indices are unchained using the function `unchain()`. Based on the derived ECOICOP tree, the unchained price indices are aggregated in one step using the Laspeyres-type index, `chain()`ed, and finally `rebase()`d to the index reference period 2015. A comparison to the published all-items index values shows only small differences due to rounding (since the published index numbers in Eurostat's database are rounded and not available with all decimals).
 ```{r warning=FALSE, fig.width=7, fig.align="center"}
-# load data.table-package:
-require(data.table)
-
 # import monthly price indices:
 prc <- hicp.dataimport(id="prc_hicp_midx", 
                        filter=list(unit="I15", geo="EA"),
