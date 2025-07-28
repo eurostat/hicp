@@ -2,21 +2,33 @@
 
 # Title:  Download HICP data
 # Author: Sebastian Weinand
-# Date:   5 February 2024
+# Date:   9 July 2025
 
 # list available HICP datasets:
-hicp.datasets <- function(){
+datasets <- function(pattern="^prc_hicp", ...){
+  
+  # input checks:
+  check.char(x=pattern, max.len=1)
+  
+  # input defaults for function:
+  defaults <- list(mode="txt")
+  
+  # get further arguments and adjust if needed:
+  dots <- list(...)
+  if(names(defaults)%in%names(dots)){
+    dots[names(dots)%in%names(defaults)] <- NULL
+  }
 
   # download table of contents of all datasets:
   tmp <- data.table::as.data.table(
-    restatapi::get_eurostat_toc(mode="txt", lang="en", verbose=FALSE)
+    do.call(restatapi::get_eurostat_toc, args=c(defaults, dots))
   )
 
   # subset to hicp datasets:
   if(is.null(tmp)){
     out <- NULL
   }else{
-    out <- tmp[grepl(pattern="^prc_hicp", x=tmp$code, ignore.case=TRUE),]
+    out <- tmp[grepl(pattern=pattern, x=tmp$code, ignore.case=TRUE),]
   }
 
   # return output:
@@ -25,23 +37,32 @@ hicp.datasets <- function(){
 }
 
 # show available filters for a dataset:
-hicp.datafilters <- function(id){
+datafilters <- function(id, ...){
 
   # input checks:
   check.char(x=id)
 
+  # input defaults for function:
+  defaults <- list(id=id)
+  
+  # get further arguments and adjust if needed:
+  dots <- list(...)
+  if(names(defaults)%in%names(dots)){
+    dots[names(dots)%in%names(defaults)] <- NULL
+  }
+  
+  # download data set definitions:
   out <- data.table::as.data.table(
-    restatapi::get_eurostat_dsd(
-      id=id,
-      lang="en",
-      verbose=FALSE))
-
+    do.call(restatapi::get_eurostat_dsd, args=c(defaults, dots))
+  )
+  
+  # return output:
   return(out)
 
 }
 
 # download dataset:
-hicp.dataimport <- function(id, filters=list(), date.range=NULL, flags=FALSE){
+data <- function(id, filters=list(), date.range=NULL, flags=FALSE, ...){
 
   # input checks:
   check.char(x=id)
@@ -64,15 +85,24 @@ hicp.dataimport <- function(id, filters=list(), date.range=NULL, flags=FALSE){
   # set filter on key:
   if(length(filters)<=0) filters <- NULL
 
+  # input defaults for function:
+  defaults <- list(id=id,
+                   filters=filters,
+                   date_filter=date.range,
+                   keep_flags=flags,
+                   stringsAsFactors=FALSE,
+                   mode="csv")
+  
+  # get further arguments and adjust if needed:
+  dots <- list(...)
+  if(any(names(defaults)%in%names(dots))){
+    dots[names(dots)%in%names(defaults)] <- NULL
+  }
+  
   # get data:
   dt <- data.table::as.data.table(
-    restatapi::get_eurostat_data(
-      id=id,
-      filters=filters,
-      date_filter=date.range,
-      keep_flags=flags,
-      stringsAsFactors=FALSE,
-      mode="csv"))
+    do.call(restatapi::get_eurostat_data, args=c(defaults, dots))
+  )
 
   # set missing flags to NA:
   if(flags) dt[flags=="", "flags":=NA_character_]
