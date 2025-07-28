@@ -68,10 +68,6 @@ expect_no_error(
   check.date(x=as.Date(NA), na.ok=TRUE)
 )
 
-expect_no_error(
-  check.date(x=as.Date(c("2021-01-02", "2005-02-01")), chronological=FALSE)
-)
-
 expect_error(
   check.date(x=1)
 )
@@ -92,13 +88,93 @@ expect_error(
   check.date(x=as.Date(NA), na.ok=FALSE)
 )
 
+
+# check.dateseries() ------------------------------------------------------
+
+
+# expect monthly frequency:
+t <- as.Date(c("2021-01-01","2021-02-01"))
+expect_no_warning(
+  check.dateseries(x=t, freq=12)
+)
+
+# non-chronological ordering:
+t <- as.Date(c("2021-02-01", "2021-01-01"))
+expect_warning(
+  check.dateseries(x=t, freq=12),
+  regexp="chronological"
+)
+
+# monthly frequency with gap:
+t <- as.Date(c("2021-01-01","2021-03-01"))
+expect_warning(
+  check.dateseries(x=t, freq=12),
+  regexp="months .* missing"
+)
+
+# monthly frequency with duplicates:
+t <- as.Date(c("2021-01-01","2021-01-13"))
 expect_error(
-  check.date(x=as.Date(c("2021-01-02", "2005-02-01")), chronological=TRUE)
+  check.dateseries(x=t, freq=12),
+  regexp="duplicated months"
+)
+
+# expect quarterly frequency:
+t <- as.Date(c("2021-01-01","2021-04-01"))
+expect_no_warning(
+  check.dateseries(x=t, freq=4)
+)
+
+# non-chronological ordering:
+t <- as.Date(c("2021-04-01","2021-01-01"))
+expect_warning(
+  check.dateseries(x=t, freq=4),
+  regexp="chronological"
+)
+
+# quarterly frequency with gap:
+t <- as.Date(c("2021-01-01","2021-07-01"))
+expect_warning(
+  check.dateseries(x=t, freq=4),
+  regexp="quarters .* missing"
+)
+
+# quarterly frequency with duplicates:
+t <- as.Date(c("2021-01-01","2021-03-13"))
+expect_error(
+  check.dateseries(x=t, freq=4),
+  regexp="duplicated quarters"
+)
+
+# expect annual frequency:
+t <- as.Date(c("2021-01-01","2022-01-01"))
+expect_no_warning(
+  check.dateseries(x=t, freq=1)
+)
+
+# non-chronological ordering:
+t <- as.Date(c("2022-01-01","2021-01-01"))
+expect_warning(
+  check.dateseries(x=t, freq=1),
+  regexp="chronological"
+)
+
+# annual frequency with gap:
+t <- as.Date(c("2021-01-01","2023-01-01"))
+expect_warning(
+  check.dateseries(x=t, freq=1),
+  regexp="years .* missing"
+)
+
+# annual frequency with duplicates:
+t <- as.Date(c("2021-01-01","2021-12-01"))
+expect_error(
+  check.dateseries(x=t, freq=1),
+  regexp="duplicated years"
 )
 
 
 # check.log() ------------------------------------------------------------
-
 
 
 expect_no_error(
@@ -211,6 +287,34 @@ expect_no_error(
 
 expect_error(
   check.lengths(x=1:10, y=1:8)
+)
+
+
+# check.list() ------------------------------------------------------------
+
+
+expect_no_error(
+  check.list(x=list("a"=1, "b"=2))
+)
+
+expect_no_error(
+  check.list(x=NULL, null.ok=TRUE)
+)
+
+expect_no_error(
+  check.list(x=list(1, 2), names=FALSE)
+)
+
+expect_error(
+  check.list(x=list(1, "b"=2), names=TRUE)
+)
+
+expect_error(
+  check.list(x=list())
+)
+
+expect_no_error(
+  check.list(x=list(), min.len=0, names=TRUE)
 )
 
 # END
