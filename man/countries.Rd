@@ -9,7 +9,7 @@
 \docType{data}
 
 \description{
-This dataset contains metadata for the euro area, EU, EFTA, and candidate countries that submit(ted) HICP data on a regular basis.
+This data set contains metadata for the euro area, EU, EFTA, and candidate countries that submit(ted) HICP data on a regular basis.
 }
 
 \format{
