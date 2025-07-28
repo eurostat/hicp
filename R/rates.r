@@ -2,71 +2,70 @@
 
 # Title:  Change rates and contributions
 # Author: Sebastian Weinand
-# Date:   5 February 2024
+# Date:   22 July 2025
 
 # compute change rates:
-rates <- function(x, t=NULL, type="monthly"){
+rates <- function(x, t, type="year", settings=list()){
 
+  # set default settings if missing:
+  if(is.null(settings$chatty)) settings$chatty <- getOption("hicp.chatty")
+  if(is.null(settings$freq)) settings$freq <- "auto"
+  
   # input checks:
   check.num(x=x)
-  check.date(x=t, null.ok=TRUE, na.ok=FALSE, chronological=FALSE)
+  check.date(x=t, na.ok=FALSE)
   check.lengths(x=x, y=t)
   check.char(x=type, min.len=1, max.len=1, na.ok=FALSE)
-
-  # match type:
-  type <- match.arg(arg=type, choices=c("monthly","annual","annual-average"))
-
-  # check if time period is available or not:
-  t.null <- is.null(t)
-
-  if(t.null){
-
-    # make assumption on time period for calculations,
-    # only needed for type='annual-average':
-    t <- t0 <- seq.Date(from=as.Date("2000-01-01"), by="1 month", length.out=length(x))
-
+  check.log(x=settings$chatty, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$freq, min.len=1, max.len=1, na.ok=FALSE)
+  
+  # match inputs:
+  type <- match.arg(arg=type, choices=c("month","quarter","year"))
+  freq <- match.arg(arg=settings$freq, choices=c("auto","month","quarter","year"))
+  
+  # frequency/number of periods per year:
+  if(freq=="auto"){
+    k <- nperiods(t)
   }else{
-
-    # ensure chronological order:
-    t <- as.Date(format(t, "%Y-%m-01"))
-    t0 <- seq.Date(from=min(t, na.rm=TRUE), to=max(t, na.rm=TRUE), by="1 month")
-    x <- x[match(x=t0, table=t)]
-
+    if(freq=="month") k <- 12L
+    if(freq=="quarter") k <- 4L
+    if(freq=="year") k <- 1L
   }
+  
+  # check chronological ordering, duplicates and gaps:
+  check.dateseries(x=t, freq=k, chatty=settings$chatty)
+  
+  # manipulate dates:
+  t <- as.Date(t, format="%Y-%m-%d") # set date format
+  y <- data.table::year(t) # get years
+  m <- pin.month(t, freq=k) # pin months to cut points
+  ym <- yearmonth(y=y, m=m) # paste to year-month
 
   # monthly change rate:
-  if(type=="monthly") res <- x/data.table::shift(x, n=1)
+  if(type=="month") res <- x/x[match(x=lag.yearmonth(y, m, n=1), table=ym)]
+  
+  # quarterly change rate:
+  if(type=="quarter") res <- x/x[match(x=lag.yearmonth(y, m, n=3), table=ym)]
 
   # annual change rate:
-  if(type=="annual") res <- x/data.table::shift(x, n=12)
-
-  # annual average change rate:
-  if(type=="annual-average"){
-
-    y <- format(t0, "%Y")
-    res <- tapply(X=x, INDEX=y, FUN=mean, na.rm=TRUE)
-    res[tapply(X=x, INDEX=y, FUN=length)<12] <- NA
-    res <- c(res/data.table::shift(as.vector(res), n=1))
-    if(t.null) names(res) <- NULL # drop names
-
-  }else{
-
-    # reorder to initial ordering:
-    res <- res[match(x=t, table=t0)]
-
-  }
+  if(type=="year") res <- x/x[match(x=lag.yearmonth(y, m, n=12), table=ym)]
 
   # transform into percentage change:
-  res <- 100*(res-1)
+  res <- as.vector(100*(res-1))
 
   # print output to console:
   return(res)
 
 }
 
-# compute contributions to annual change rate:
-contrib <- function(x, w, t, x.all, w.all, method="ribe"){
-
+# compute contributions to change rate:
+contrib <- function(x, w, t, x.all, w.all, type="year", settings=list()){
+  
+  # set default settings if missing:
+  if(is.null(settings$chatty)) settings$chatty <- getOption("hicp.chatty")
+  if(is.null(settings$freq)) settings$freq <- "auto"
+  if(is.null(settings$method)) settings$method <- "ribe"
+  
   # input checks:
   check.num(x=x)
   check.num(x=w)
@@ -77,57 +76,119 @@ contrib <- function(x, w, t, x.all, w.all, method="ribe"){
   check.lengths(x=x, y=t)
   check.lengths(x=x, y=x.all)
   check.lengths(x=x, y=w.all)
-  check.char(x=method, min.len=1, max.len=1, na.ok=FALSE)
-
-  # match argument:
-  method <- match.arg(arg=method, choices=c("ribe","kirchner"))
-
+  check.char(x=type, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$method, min.len=1, max.len=1, na.ok=FALSE)
+  check.log(x=settings$chatty, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$freq, min.len=1, max.len=1, na.ok=FALSE)
+  
+  # match inputs:
+  type <- match.arg(arg=type, choices=c("month","quarter","year"))
+  method <- match.arg(arg=settings$method, choices=c("ribe","kirchner"))
+  freq <- match.arg(arg=settings$freq, choices=c("auto","month","quarter","year"))
+  
+  # frequency/number of periods per year:
+  if(freq=="auto"){
+    k <- nperiods(t)
+  }else{
+    if(freq=="month") k <- 12L
+    if(freq=="quarter") k <- 4L
+    if(freq=="year") k <- 1L
+  }
+  
+  # check chronological ordering, duplicates and gaps:
+  check.dateseries(x=t, freq=k, chatty=settings$chatty)
+  
+  # translate type into integer:
+  if(type=="month") type <- 1L
+  if(type=="quarter") type <- 3L
+  if(type=="year") type <- 12L
+  # this must be static, i.e. irrespective of
+  # the frequency. similar to rates().
+  
+  # manipulate dates:
+  t <- as.Date(t, format="%Y-%m-%d") # set date format
+  y <- data.table::year(t) # get years
+  m <- pin.month(t, freq=k) # pin months to cut points
+  ym <- yearmonth(y=y, m=m) # paste to year-month
+  
   # unchain indices:
-  x.unchained <- hicp::unchain(x=x, t=t, by=12)
-  x.all.unchained <- hicp::unchain(x=x.all, t=t, by=12)
-  # # set total values if missing; this leads to an outcome
-  # # that coincides with the annual rates of change of 'x':
-  # if(is.null(x.all) | is.null(w.all)){
-  #   w.all <- w
-  #   x.all.unchained <- x.unchained
-  #   x.all <- x
-  # }else{
-  #   x.all.unchained <- unchain(x=x.all, t=t, by=12)
-  # }
-
-  # rescale indices:
-  t.dec <- format(t, "%m")==12L
-  x.dec <- x.unchained[t.dec]
-  x.rescaled <- x.dec[match(x=format(t, "%Y"), table=format(t[t.dec], "%Y"))]/x.unchained
-  x.all.dec <- x.all.unchained[t.dec]
-  x.all.rescaled <- x.all.dec[match(x=format(t, "%Y"), table=format(t[t.dec], "%Y"))]/x.all.unchained
-
-  # rescale item weights:
-  w.rescaled <- w*x.unchained/x.all.unchained
-  w.all.rescaled <- w.all*x.all.unchained/x.all.unchained
-
-  # ribe decompositon:
-  if(method=="ribe"){
-    # compute this-year term and last-year term:
-    ty <- 100*data.table::shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
-    ly <- data.table::shift(x=100*(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
-    if(any(abs(ly[t.dec])>0.0001, na.rm=TRUE)){
-      warning("Last year term in December deviates from 0. Something might be wrong here.", call.=FALSE)
+  x0 <- hicp::unchain(x=x, t=t, by=12)
+  x.all0 <- hicp::unchain(x=x.all, t=t, by=12)
+  
+  # contributions to change rates within the same year:
+  within <- function(x, x.all, w, w.all, y, m, ym, type){
+    
+    # this function follows Section 8.6.1 of the HICP Manual
+    # but ignores the simplification of the formula in January
+    # each year
+    
+    # lag by number of months:
+    idx <- match(x=lag.yearmonth(y, m, n=type), table=ym)
+    
+    # rescale indices and weights within calendar year:
+    x.rescaled <- x/x[idx]
+    w.rescaled <- w*(x/x.all)[idx]
+    w.all.rescaled <- w.all*(x.all/x.all)[idx]
+    
+    # contributions to change rates:
+    res <- (x.rescaled-1)*(w.rescaled/w.all.rescaled)
+    
+    return(res)
+    
+  }
+  
+  # contributions to change rates between years:
+  between <- function(x, x.all, w, w.all, y, m, ym, method, type){
+    
+    # this function follows Section 8.6.3 of the HICP Manual
+    
+    # lag by number of months:
+    idx <- match(x=lag.yearmonth(y, m, n=type), table=ym)
+    
+    # rescale indices and weights between calendar years:
+    t12 <- m==12L
+    x12 <- x[t12]
+    x.rescaled <- x12[match(x=y, table=y[t12])]/x
+    x.all12 <- x.all[t12]
+    x.all.rescaled <- x.all12[match(x=y, table=y[t12])]/x.all
+    
+    # rescale item weights:
+    w.rescaled <- w*x/x.all
+    w.all.rescaled <- w.all*x.all/x.all
+    
+    # ribe decompositon:
+    if(method=="ribe"){
+      # compute this-year term and last-year term:
+      ty <- x.all.rescaled[idx]*(x-1)*(w/w.all)
+      ly <- ((x.rescaled-1)*(w.rescaled/w.all.rescaled))[idx]
+      if(getOption("hicp.chatty") && any(abs(ly[t12])>0.0001 & m[t12]<type, na.rm=TRUE)){
+        warning("Last year term in December deviates from 0. Something might be wrong here.", call.=FALSE)
+      }
+      res <- ty+ly
     }
-    res <- ty+ly
+    
+    # kirchner decomposition:
+    if(method=="kirchner"){
+      ty <- x.all.rescaled[idx]*(x-1)*(w/w.all)
+      ly1 <- x.all*((x.rescaled-1)*(w.rescaled/w.all.rescaled))[idx]
+      ly2 <- (w/w.all)*(x-1)*((x.rescaled-1)*(w.rescaled/w.all.rescaled))[idx]
+      res <- ty+ly1-ly2
+    }
+    
+    return(res)
+    
   }
-
-  # kirchner decomposition:
-  if(method=="kirchner"){
-    ty <- 100*data.table::shift(x=x.all.rescaled, n=12)*(x.unchained-1)*(w/w.all)
-    ly1 <- 100*x.all.unchained*shift(x=(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
-    ly2 <- 100*(w/w.all)*(x.unchained-1)*shift(x=(x.rescaled-1)*(w.rescaled/w.all.rescaled), n=12)
-    res <- ty+ly1-ly2
-  }
-
+  
+  # compute contributions:
+  res <- 100*data.table::fcase(
+    m>type, within(x=x0, x.all=x.all0, w=w, w.all=w.all, y=y, m=m, ym=ym, type=type),
+    m==type, (x0-1)*(w/w.all), 
+    m<type, between(x=x0, x.all=x.all0, w=w, w.all=w.all, y=y, m=m, ym=ym, type=type, method=method)
+  )
+  
   # print output to console:
   return(res)
-
+  
 }
 
 # END

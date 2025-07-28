@@ -8,27 +8,41 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{rates()} computes monthly, annual and annual average rates of change for an index series. Function \code{contrib()} computes the contributions of a subcomponent to the annual change rate of the overall index.
+Function \code{rates()} derives monthly, quarterly and annual rates of change from an index series. 
+
+Function \code{contrib()} computes the contributions of a subcomponent (e.g., food, energy) to the change rate of the overall index (for chained indices with price reference period December of the previous year).
 }
 
 \usage{
-rates(x, t=NULL, type="monthly")
+rates(x, t, type="year", settings=list())
 
-contrib(x, w, t, x.all, w.all, method="ribe")
+contrib(x, w, t, x.all, w.all, type="year", settings=list())
 }
 
 \arguments{
-  \item{x, x.all}{numeric vector of index values.}
+  \item{x, x.all}{numeric vector of index values of the subcomponent (\code{x}) and the overall index (\code{x.all}).}
   \item{w, w.all}{numeric vector of weights of the subcomponent (\code{w}) and the overall index (\code{w.all}).}
-  \item{t}{date vector.}
-  \item{type}{character specifying the type of change rate. Allowed values are \code{monthly} for monthly change rates, \code{annual} for annual change rates, and \code{annual-average} for annual average change rates.}
-  \item{method}{character specifying the method used for the calculations. Allowed values are \code{ribe} and \code{kirchner}.}
+  \item{t}{date vector in format \code{YYYY-MM-DD} with monthly frequency, that is, one observation per month. Quarterly and yearly frequencies are also supported.}
+  \item{type}{character specifying the type of change rate. Allowed values are \code{month} for monthly change rates, \code{quarter} for quarterly change rates, and \code{year} for annual change rates. See also details.}
+  \item{settings}{list of control settings to be used. The following settings are supported:
+  \itemize{
+    \item \code{chatty} : logical indicating if package-specific warnings and info messages should be printed or not. The default is \code{getOption("hicp.chatty")}.
+    \item \code{freq} : character specifying the frequency of \code{t}. Allowed values are \code{month}, \code{quarter}, \code{year}, and \code{auto} (the default). For \code{auto}, the frequency is internally derived from \code{t}.
+    \item \code{method} : character specifying the method for decomposing the change rates. Allowed values are \code{ribe} (the default) and \code{kirchner}.
+    }}
+}
+
+\details{
+For monthly frequency, the change rates show the percentage change of \code{x} in the current month compared to the previous month (monthly change rates, \emph{m-1}), compared to three months ago (quarterly change rates, \emph{m-3}), or compared to the same month one year before (annual change rates, \emph{m-12}).
+
+For quarterly frequency, the change rates show the percentage change of \code{x} in the current quarter compared to the previous quarter (quarterly change rates, \emph{q-1}) or compared to the same quarter one year before (annual change rates, \emph{q-4}).
+
+For yearly frequency, the change rates show the percentage change of \code{x} in the current year compared to the previous year (annual change rates, \emph{y-1}).
+If \code{x} is an annual index produced by \code{convert()}, the annual change rates correspond to annual average change rates.
 }
 
 \value{
-For \code{rates()}, a numeric vector of the same length as \code{x} if \code{type='monthly'} or \code{type='annual'}. If \code{type='annual-average'}, same length as years available.
-
-For \code{contrib()}, a numeric vector of the same length as \code{x}.
+A numeric vector of the same length as \code{x}.
 }
 
 \references{
@@ -38,29 +52,36 @@ European Commission, Eurostat, \emph{Harmonised Index of Consumer Prices (HICP) 
 \examples{
 ### EXAMPLE 1
 
-P <- rnorm(n=25,mean=100,sd=5)
-t <- seq.Date(from=as.Date("2021-01-01"), by="1 month", length.out=length(P))
+p <- rnorm(n=37,mean=100,sd=5)
+t <- seq.Date(from=as.Date("2020-12-01"), by="1 month", length.out=length(p))
 
-rates(x=P, type="monthly")
-rates(x=P, type="annual")
-rates(x=P, type="annual-average")
-rates(x=P, t=t, type="annual-average")
+# compute change rates:
+rates(x=p, t=t, type="month") # one month to the previous month
+rates(x=p, t=t, type="year")  # month to the same month of previous year
 
-### EXAMPLE 2: Contributions using published HICP data
+# compute annual average rate of change:
+pa <- convert(x=p, t=t, type="y") # now annual frequency
+rates(x=pa, t=as.Date(names(pa)), type="year")
+
+# compute 12-month average rate of change:
+pmvg <- convert(x=p, t=t, type="12mavg") # still monthly frequency
+rates(x=pmvg, t=t, type="year")
 \donttest{
-# set cores for testing on CRAN:
-library(restatapi)
-options(restatapi_cores=1)
+### EXAMPLE 2: Ribe contributions using published HICP data
+
 library(data.table)
+library(restatapi)
+options(restatapi_cores=1)  # set cores for testing on CRAN
+options(hicp.chatty=FALSE)  # suppress package messages and warnings
 
 # import monthly price indices:
-prc <- hicp.dataimport(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
+prc <- hicp::data(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
 prc[, "time":=as.Date(paste0(time, "-01"))]
 prc[, "year":=as.integer(format(time, "\%Y"))]
 setnames(x=prc, old="values", new="index")
 
 # import item weights:
-inw <- hicp.dataimport(id="prc_hicp_inw", filter=list(geo="EA"))
+inw <- hicp::data(id="prc_hicp_inw", filter=list(geo="EA"))
 inw[, "time":=as.integer(time)]
 setnames(x=inw, old=c("time","values"), new=c("year","weight"))
 
@@ -74,22 +95,14 @@ hicp.data <- merge(x=hicp.data,
 
 # ribe decomposition:
 hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, 
-                              x.all=index_all, w.all=weight_all), by="coicop"]
+                              x.all=index_all, w.all=weight_all,
+                              type="year", settings=list(method="ribe")), by="coicop"]
 
-# annual change rates over time:
-plot(rates(x=index, t=time, type="annual")~time,
+# plot annual change rates over time:
+plot(rates(x=index, t=time, type="year")~time,
      data=hicp.data[coicop=="CP00",],
      type="l", ylim=c(-2,12))
 
-# add contribution of energy:
+# add contribution of energy to plot:
 lines(ribe~time, data=hicp.data[coicop=="NRG"], col="red")
-
-# compare to published contributions:
-hicp.ctrb <- hicp.dataimport(id="prc_hicp_ctrb")
-hicp.ctrb[, "time":=as.Date(paste0(time, "-01"))]
-dt.comp <- merge(x=hicp.ctrb,
-                 y=hicp.data[, list(coicop, time, ribe)],
-                 by=c("coicop","time"),
-                 all=TRUE)
-head(dt.comp[!is.na(values) & abs(values-ribe)>0.1, ]) # should be empty
 }}
