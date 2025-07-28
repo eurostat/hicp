@@ -1,7 +1,8 @@
 ---
 title: "Introduction to the `hicp`-package"
 author: "Sebastian Weinand"
-date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.Date(),'%d %B %Y')`"
+#date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.Date(),'%d %B %Y')`"
+date: "July 2025"
 output: 
   rmarkdown::html_vignette:
     toc: true
@@ -20,6 +21,11 @@ Sys.setenv(LANGUAGE="en")
 library(restatapi)
 options(restatapi_cores=1)
 
+# load additional packages:
+library(data.table)
+options(datatable.print.nrows=10)
+options(datatable.print.topn=5)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -27,135 +33,152 @@ knitr::opts_chunk$set(
 ```
 
 <br/><br/>
-The Harmonised Index of Consumer Prices (HICP) is the key economic figure to measure inflation in the euro area. The methodology underlying the HICP is documented in the HICP Methodological Manual [@Eurostat2024]. Based on this manual, the `hicp`-package provides functions for data users to work with publicly available HICP price indices and weights (*upper-level aggregation*). The following vignette highlights the main package features. It contains three sections on data access, the Classification of Consumption by Individual Purpose (COICOP) underlying the HICP, and index aggregation.   
+The Harmonised Index of Consumer Prices (HICP) is the key economic figure to measure inflation in the euro area. The methodology underlying the HICP is documented in the HICP Methodological Manual [@Eurostat2024]. Based on this manual, the `hicp`-package provides functions for data users to work with publicly available HICP price indices and weights (*upper-level aggregation*).
+
+This vignette highlights the main package features. It contains three sections on data access, the classification of individual consumption by purpose (COICOP) underlying the HICP, as well as index aggregation, change rates and contributions of lower-level indices to the overall inflation rate. It also shows how the package functions can be similarly used for working with quarterly index series like the owner-occupied housing price index (OOHPI).  
 ```{r setup, message=FALSE}
 # load package:
 library(hicp)
 
-# load additional packages:
-library(data.table)
-
 # set global options:
-options(hicp.coicop.version="ecoicop-hicp")   # the coicop version to be used
-options(hicp.unbundle=TRUE)                   # treatment of coicop bundle codes like 08X
-options(hicp.all.items.code="00")             # internal code for the all-items index
+options(hicp.coicop.version="ecoicop.hicp")         # the coicop version to be used
+options(hicp.coicop.bundles=hicp:::coicop.bundles)  # coicop bundle code dictionary (e.g., 08X)
+options(hicp.all.items.code="00")                   # internal code for the all-items index
+options(hicp.chatty=TRUE)                           # print package-specific messages and warnings
 ```
 
 # HICP data
 
-The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://CRAN.R-project.org/package=restatapi)-package. This section shows how to list, filter and retrieve HICP data using the functions `hicp.datasets()`, `hicp.datafilters()`, and `hicp.dataimport()`.
+The `hicp`-package offers easy access to HICP data from Eurostat's public [database](https://ec.europa.eu/eurostat/data/database). For that purpose, it uses the download functionality provided by Eurostat's [`restatapi`](https://CRAN.R-project.org/package=restatapi)-package. This section shows how to list, filter and retrieve HICP data using the functions `datasets()`, `datafilters()`, and `data()`.
 
-## Step 1: Available datasets
+## Step 1: Available data sets
 
-Eurostat's database contains various datasets of different statistics. All datasets are classified by topic and can be accessed via a navigation tree. HICP data can be found under "Economy and finance / Prices". An even simpler solution that does not require visiting Eurostat's database is provided by the function `hicp.datasets()`, which lists all available HICP datasets with corresponding metadata (e.g., number of observations, last update).
+Eurostat's database contains various data sets of different statistics. All data sets are classified by topic and can be accessed via a navigation tree. HICP data can be found under "Economy and finance / Prices". An even simpler solution that does not require visiting Eurostat's database is provided by the function `datasets()`, which lists all available HICP data sets with corresponding metadata (e.g., number of observations, last update).
+```{r echo=FALSE}
+load(file.path("data", "hicp_datasets.RData"))
+```
+```{r eval=FALSE}
+# download table of available HICP data sets:
+dtd <- datasets()
+```
+The function output shows the first five HICP data sets. As can be seen, a short description of each data set and some metadata are provided. The variable `code` is the data set identifier, which is needed to filter and download data.
 ```{r warning=FALSE}
-dtd <- hicp.datasets()
 dtd[1:5, list(title, code, lastUpdate, values)]
 ```
-The output above shows the first five HICP datasets. As can be seen, a short description of each dataset and some metadata are provided. The variable `code` is the dataset identifier, which is needed to filter and download data.
 
 ## Step 2: Allowed data filters
 
-The HICP is compiled each month in each member state of the European Union (EU) for various items. Its compilation started in 1996. Therefore, the dataset of price indices is relatively large. Sometimes, however, data users only need the price indices of certain years or specific countries. Eurostat's API and, thus, the `restatapi`-package allows to provide filters on each data request, e.g., to download only the price indices of the euro area for the all-items HICP. The filtering options can differ for each dataset. Therefore, function `hicp.datafilters()` returns the allowed filtering options for a given dataset.
+The HICP is compiled each month in each member state of the European Union (EU) for various items. Its compilation started in 1996. Therefore, the data set of price indices is relatively large. Sometimes, however, data users only need the price indices of certain years or specific countries. Eurostat's API and, thus, the `restatapi`-package allows to provide filters on each data request, e.g., to download only the price indices of the euro area for the all-items HICP. The filtering options can differ for each data set. Therefore, the function `datafilters()` returns the allowed filtering options for a given data set.
+```{r echo=FALSE}
+load(file.path("data", "hicp_datafilters.RData"))
+```
+```{r eval=FALSE}
+# download allowed filters for data set 'prc_hicp_inw':
+dtf <- datafilters(id="prc_hicp_inw")
+```
+The function output shows that the data set `prc_hicp_inw` for the HICP item weights can be filtered with respect to the frequency (`freq`), the product code (`coicop`), and the geographical area (`geo`). The table `dtf` contains for each filter the allowed values, e.g., `CP011` for `coicop` and `A` for `freq`. These filters can be integrated in the data download as explained in the following subsection.
 ```{r warning=FALSE}
-# dataset 'prc_hicp_inw':
-dtf <- hicp.datafilters(id="prc_hicp_inw")
-
 # allowed filters:
 unique(dtf$concept)
 
 # allowed filter values:
 dtf[1:5,]
 ```
-The output above shows that the dataset `prc_hicp_inw` on item weights can be filtered according to `freq`, `coicop`, and `geo`. The table `dtf` contains for each filter the allowed values, e.g., `CP011` for `coicop` and `A` for `freq`. These filters can be integrated in the data download as explained in the following subsection.
 
 ## Step 3: Data download
 
-Applying a filter to a data request can noticeably reduce the downloading time, particularly for bigger datasets. Function `hicp.dataimport()` can be used to download a specific dataset.
+Applying a filter to a data request can noticeably reduce the downloading time, particularly for bigger data sets. The function `data()` can be used to download a specific data set.
+```{r echo=FALSE}
+load(file.path("data", "hicp_itemweights.RData"))
+```
+```{r eval=FALSE}
+# download item weights with filters:
+item.weights <- hicp::data(id="prc_hicp_inw", 
+                           filters=list("geo"=c("EA","DE","FR")), 
+                           date.range=c("2015","2024"), 
+                           flags=TRUE)
+```
+The object `item.weights` contains the item weights for the euro area, Germany, and France from 2015 to 2024.
 ```{r warning=FALSE}
-# download item weights for euro area from 2015 on:
-item.weights <- hicp.dataimport(id="prc_hicp_inw", filters=list("geo"=c("EA","DE","FR")), date.range=c("2015", NA), flags=TRUE)
-
 # inspect data:
 item.weights[1:5, ]
 nrow(item.weights) # number of observations
 unique(item.weights$geo) # only EA, DE, and FR
-range(item.weights$time) # since 2015
+range(item.weights$time) # from 2015 to 2023
 ```
-The object `dt` contains the item weights for the euro area since 2015. If one would have wanted the whole dataset, the request would simplify to `hicp.dataimport(id="prc_hicp_inw")`.
+If one would have wanted the whole data set, the request would simplify to `hicp::data(id="prc_hicp_inw")`.
 
 # HICP and COICOP
 
-HICP item weights and price indices are classified according to the European COICOP (ECOICOP-HICP). This COICOP version is used by default (`options(hicp.coicop.version="ecoicop-hicp")`) but others are available in the package as well. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, ECOICOP and thus also the HICP follows a pre-defined hierarchical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
+HICP item weights and price indices are classified according to the European COICOP (ECOICOP-HICP). This COICOP version is used by default (`options(hicp.coicop.version="ecoicop.hicp")`) but others are available in the package as well. The all-items HICP includes twelve item divisions, which are further broken down by consumption purpose. At the lowest level of subclasses (5-digit codes), there is the finest differentiation of items for which weights are available, e.g., *rice* (01111) or *bread* (01113). Both rice and bread belong to the same class, *bread and cereals (0111)*, and, at higher levels, to the same group *food (011)* and division *food and non-alcoholic beverages (01)*. Hence, ECOICOP and thus also the HICP follows a pre-defined hierarchical tree, where the item weights of the all-items HICP add up to 1000. This section shows how to work with the COICOP codes to derive for example the lowest level of items that form the all-items HICP.
 
 ## COICOP codes, bundles, and relatives
 
-**COICOP codes and bundles.** The COICOP codes underlying the HICP ([ECOICOP](https://op.europa.eu/de/web/eu-vocabularies/dataset/-/resource?uri=http://publications.europa.eu/resource/dataset/ecoicop-hicp)) consist of numbers. The code `00` is used in this package for the all-items HICP although it is no official COICOP code (see `options(hicp.all.items.code="00")`). The codes of the twelve divisions below start with `01, 02,..., 12`. At the lowest level of subclasses, the codes consist of 5 digits. Using the function `is.coicop()`, it can be easily checked if a code is a valid COICOP code or not. This includes bundle codes like `082_083`, which violate the standard COICOP code pattern, but can be found in HICP data. Bundle codes can be generally detected using `is.bundle()` and be unbundled using function `unbundle()`.
+**COICOP codes and bundles.** The COICOP codes underlying the HICP ([ECOICOP](https://op.europa.eu/de/web/eu-vocabularies/dataset/-/resource?uri=http://publications.europa.eu/resource/dataset/ecoicop-hicp)) consist of numbers. The code `00` is used in this package for the all-items HICP although it is no official COICOP code (see `options(hicp.all.items.code="00")`). The codes of the twelve divisions below are `01, 02,..., 12`. At the lowest level of subclasses, the codes consist of 5 digits.
+
+Using the function `is.coicop()`, it can be easily checked if a code is a valid COICOP code or not. This excludes bundle codes like `082_083`, which violate the standard COICOP code pattern, but can be found in HICP data. Bundle codes can be generally detected using the function `is.bundle()` and be 'unbundled' into the underlying valid COICOP codes using the function `unbundle()`.
 ```{r warning=FALSE}
 # example codes:
-ids <- c("00","CP00","13","08X")
+ids <- c("00","CP00","01","08X")
 
-# check for bundle codes:
+# check if bundle codes:
 is.bundle(id=ids)
 
 # unbundle any bundle codes into their components:
 unbundle(id=ids)
 
-# check if valid ECOICOP code including bundle codes:
-is.coicop(id=ids, settings=list(unbundle=TRUE))
-
-# check if valid ECOICOP code excluding bundle codes:
-is.coicop(id=ids, settings=list(unbundle=FALSE))
+# bundle codes are no valid ECOICOP codes:
+is.coicop(id=ids)
 
 # games of chance have a valid ECOICOP code:
 is.coicop("0943", settings=list(coicop.version="ecoicop"))
-# but not in the ECOICOP-HICP:
-is.coicop("0943", settings=list(coicop.version="ecoicop-hicp"))
+
+# but not in the ECOICOP-HICP version 1:
+is.coicop("0943", settings=list(coicop.version="ecoicop.hicp"))
 ```
 
-**COICOP relatives.** COICOP codes available in the data downloaded from Eurostat's database should be generally valid (except for the prefix "CP"). More relevant is thus the detection of children and parent codes in the data. Children are those codes that belong to the same higher-level code (or parent). Such relations can be direct (e.g., `01->011`) or indirect (e.g., `01->0111`). It is important to note that children exhibit exactly one parent, while a parent may contain multiple children. This can be seen in the example below.
+**COICOP relatives.** COICOP codes available in the data downloaded from Eurostat's database should be generally valid (except for the prefix "CP"). More relevant is thus the detection of children and parent codes in the data. Children are those codes that belong to the same higher-level code (or parent). Such relations can be direct (e.g., `01->011`) or indirect (e.g., `01->0111`). It is important to note that children usually exhibit exactly one parent, while a parent may contain multiple children. This can be seen in the example below.
 ```{r warning=FALSE}
 # example codes:
 ids <- c("00","01","011","01111","01112")
 
-# no direct parent for 01111 and 01112:
-parent(id=ids, flag=FALSE, direct=TRUE)
+# no direct parent for 01111 and 01112 available:
+parent(id=ids, usedict=FALSE, closest=FALSE, k=1)
 
-# indirect parent available:
-parent(id=ids, flag=FALSE, direct=FALSE)
+# but 011 is one indirect (or closest) parent:
+parent(id=ids, usedict=FALSE, closest=TRUE)
 
-# 011 has two (indirect) childs:
-child(id=ids, flag=FALSE, direct=FALSE)
+# while 011 has two (indirect) children:
+child(id=ids, usedict=FALSE, closest=TRUE)
 ```
 
 ## Deriving the COICOP tree for index aggregation
 
-The functions `child()` and `parents()` may be useful for various reasons. To derive the composition of COICOP codes at the lowest possible level, however, the function `tree()` is better suited. For the HICP, the derivation of this composition can be done separately for each reporting month and country. Consequently, the selection of COICOP codes may differ across space and time. If needed, however, specifying argument `by` in function `tree()` allows to merge the composition of COICOP codes at the lowest possible level, e.g., to obtain a unique selection of the same COICOP codes over time. Because the derivation of COICOP codes searches in the whole COICOP tree, the resulting composition of COICOP codes is also denoted as the *COICOP tree* in this package. 
+The functions `child()` and `parents()` may be useful for various reasons. To derive the composition of COICOP codes at the lowest possible level, however, the function `tree()` is better suited. For the HICP, the derivation of this composition can be done separately for each country and year. Consequently, the selection of COICOP codes may differ across space and time. If needed, however, specifying the argument `by` in function `tree()` allows to merge the composition of COICOP codes at the lowest possible level, e.g., to obtain a unique selection of the same COICOP codes over time. Because the derivation of COICOP codes searches in the whole COICOP tree, the resulting composition of COICOP codes is also denoted as the *COICOP tree* in this package. 
 ```{r warning=FALSE}
-# subset and adjust item weights table:
-item.weights <- item.weights[grepl("^CP", coicop),]
+# adjust COICOP codes:
 item.weights[, "coicop":=gsub(pattern="^CP", replacement="", x=coicop)]
 
 # derive separate trees for each time period and country:
-item.weights[, "t1" := tree(id=coicop, w=values, settings=list(w.tol=0.1)), by=c("geo","time")]
+item.weights[, "t1" := tree(id=coicop, w=values, flag=TRUE, settings=list(w.tol=0.1)), by=c("geo","time")]
 item.weights[t1==TRUE,
         list("n"=uniqueN(coicop),           # varying coicops over time and space
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
-        by=c("geo","time")]
+        by=c("geo","time")][order(geo,time),]
 
 # derive merged trees over time, but not across countries:
-item.weights[, "t2" := tree(id=coicop, by=time, w=values, settings=list(w.tol=0.1)), by="geo"]
+item.weights[, "t2" := tree(id=coicop, by=time, w=values, flag=TRUE, settings=list(w.tol=0.1)), by="geo"]
 item.weights[t2==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time in a country
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
-        by=c("geo","time")]
+        by=c("geo","time")][order(geo,time),]
 
 # derive merged trees over countries and time:
-item.weights[, "t3" := tree(id=coicop, by=paste(geo,time), w=values, settings=list(w.tol=0.1))]
+item.weights[, "t3" := tree(id=coicop, by=paste(geo,time), w=values, flag=TRUE, settings=list(w.tol=0.1))]
 item.weights[t3==TRUE,
         list("n"=uniqueN(coicop),           # same selection over time and across countries
              "w"=sum(values, na.rm=TRUE)),  # weight sums should equal 1000
-        by=c("geo","time")]
+        by=c("geo","time")][order(geo,time),]
 ```
 All three COICOP trees in the example above can be used to aggregate the all-items HICP in a single aggregation step as the item weights add up to 1000, respectively. While the selection of COICOP codes varies over time and across countries for `t1`, it is the same over time and across countries for `t3`.
 
@@ -165,66 +188,74 @@ The HICP is a chain-linked Laspeyres-type index [@EU2016]. The (unchained) price
 
 ## Index aggregation
 
-The all-items index is a weighted average of the items' subindices. However, because the HICP is a chain index, the subindices can not simply be aggregated. They first need to be unchained, i.e., expressed relative to December of the previous year. These unchained indices can then be aggregated as a weighted average. Since the Laspeyres-type index is *consistent in aggregation*, the aggregation can be done stepwise from the bottom level to the top or directly in one step.
+The all-items index is a weighted average of the items' subindices. However, because the HICP is a chain index, the subindices can not simply be aggregated. They first need to be unchained, i.e., expressed relative to December of the previous year. These unchained indices can then be aggregated as a weighted average. Since the Laspeyres-type index is *consistent in aggregation*, the aggregation can be done gradually from the bottom level to the top or directly in one step.
 
-In the following example, the euro area HICP is computed directly in one step and also stepwise through all higher-level indices. For that purpose, the monthly price indices and item weights are first downloaded from Eurostat's database. The two datasets are then merged. Second, the price indices are unchained using the function `unchain()`. Based on the derived ECOICOP tree, the unchained price indices are aggregated in one step using the Laspeyres-type index, `chain()`ed, and finally `rebase()`d to the index reference period 2015. A comparison to the published all-items index values shows only small differences due to rounding (since the published index numbers in Eurostat's database are rounded and not available with all decimals).
-```{r warning=FALSE, fig.width=7, fig.align="center"}
-# import monthly price indices:
-prc <- hicp.dataimport(id="prc_hicp_midx", 
-                       filter=list(unit="I15", geo="EA"),
-                       date.range=c("2014-12", NA))
+In the following example, the euro area HICP is computed directly in one step and also gradually through all higher-level indices. First, the monthly price indices are downloaded from Eurostat's database for the index reference period 2015=100 (`unit`) and the period from December 2014 to December 2024.
+```{r echo=FALSE}
+load(file.path("data", "hicp_prices.RData"))
+```
+```{r eval=FALSE}
+# download monthly price indices:
+prc <- hicp::data(id="prc_hicp_midx", 
+                  filter=list(unit="I15", geo="EA"),
+                  date.range=c("2014-12", "2024-12"))
+```
+```{r warning=FALSE}
+# manipulate data:
 prc[, "time":=as.Date(paste0(time, "-01"))]
 prc[, "year":=as.integer(format(time, "%Y"))]
 prc[, "coicop" := gsub(pattern="^CP", replacement="", x=coicop)]
 setnames(x=prc, old="values", new="index")
-
+```
+Second, the price indices are unchained separately for each ECOICOP using the function `unchain()`.
+```{r warning=FALSE}
 # unchain price indices:
 prc[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
-
-# import item weights:
-inw <- item.weights[geo=="EA", list(coicop,geo,time,values)]
+```
+The (unchained) price indices `prc` and the item weights `inw` are then merged into one data set.
+```{r warning=FALSE}
+# manipulate item weights:
+inw <- item.weights[geo=="EA", list(coicop,geo,time,values,t1)]
 inw[, "time":=as.integer(time)]
-setnames(x=inw, old=c("time","values"), new=c("year","weight"))
-
-# derive coicop tree:
-inw[ , "tree":=tree(id=coicop, w=weight, settings=list(w.tol=0.1)), by=c("geo","year")]
+setnames(x=inw, old=c("time","values","t1"), new=c("year","weight","tree"))
 
 # merge price indices and item weights:
 hicp.data <- merge(x=prc, y=inw, by=c("geo","coicop","year"), all.x=TRUE)
-hicp.data <- hicp.data[year <= year(Sys.Date())-1,]
-
+```
+Based on the derived ECOICOP tree, the unchained price indices are aggregated in one step using the function `laspeyres()`, chained into a long-term index series using the function `chain()`, and finally re-referenced to the index reference period 2015 using the function `rebase()`. The resulting index is plotted below.
+```{r warning=FALSE, fig.width=7, fig.align="center"}
 # compute all-items HICP in one aggregation step:
 hicp.own <- hicp.data[tree==TRUE, 
                       list("laspey"=laspeyres(x=dec_ratio, w0=weight)), 
                       by="time"]
 setorderv(x=hicp.own, cols="time")
+
+# chain the resulting index:
 hicp.own[, "chain_laspey" := chain(x=laspey, t=time, by=12)]
+
+# rebase the index to 2015:
 hicp.own[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015")]
 
-# add published all-items HICP for comparison:
-hicp.own <- merge(x=hicp.own,
-                  y=hicp.data[coicop=="00", list(time, index)],
-                  by="time",
-                  all.x=TRUE)
-plot(index-chain_laspey_15~time, 
-     data=hicp.own, type="l", 
-     xlab="Time", ylab="Difference (in index points)")
-title("Difference between published index and own calculations")
+# plot all-items index:
+plot(chain_laspey_15~time, data=hicp.own, type="l", xlab="Time", ylab="Index")
+title("Euro area HICP")
 abline(h=0, lty="dashed")
 ```
 
-Similarly, the (unchained) price indices are also `aggregate()`d stepwise, which produces in addition to the all-items index all higher-level subindices. A comparison to the all-items index that has been computed in one step shows no differences. This highlights the consistency in aggregation of the indices. User-defined functions can be passed to `aggregate()` as well, which allows aggregation using any weighted or unweighted index formula.
-```{r warning=FALSE, fig.width=7, fig.align="center"}
-# compute all-items HICP stepwise through all higher-levels:
-hicp.own.all <- hicp.data[is.coicop(coicop), 
-                          aggregate(x=dec_ratio, w0=weight, grp=coicop, index=laspeyres),
-                          by="time"]
+Similarly, the (unchained) price indices are aggregated gradually following the ECOICOP tree, which produces in addition to the all-items index all lower-level indices. 
+```{r warning=FALSE}
+# compute all-items HICP gradually from bottom to top:
+hicp.own.all <- hicp.data[ , aggregate.tree(x=dec_ratio, w0=weight, id=coicop, formula=laspeyres), 
+                           by="time"]
 setorderv(x=hicp.own.all, cols="time")
-hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="grp"]
-hicp.own.all[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015"), by="grp"]
+hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="id"]
+hicp.own.all[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015"), by="id"]
+```
 
+A comparison to the all-items index that has been computed in one step shows no differences. This highlights the consistency in aggregation of the Laspeyres-type index.
+```{r warning=FALSE}
 # compare all-items HICP from direct and step-wise aggregation:
-agg.comp <- merge(x=hicp.own.all[grp=="00", list(time, "index_stpwse"=chain_laspey_15)],
+agg.comp <- merge(x=hicp.own.all[id=="00", list(time, "index_stpwse"=chain_laspey_15)],
                   y=hicp.own[, list(time, "index_direct"=chain_laspey_15)],
                   by="time")
 
@@ -232,13 +263,35 @@ agg.comp <- merge(x=hicp.own.all[grp=="00", list(time, "index_stpwse"=chain_lasp
 nrow(agg.comp[abs(index_stpwse-index_direct)>1e-4,])
 ```
 
+User-defined aggregates can be easily calculated with the functions `aggregate()` and `disaggregate()`. This is particularly useful for the calculation of the HICP special aggregates like food, energy or the overall index excluding the two.
+```{r warning=FALSE}
+# compute food and energy by aggregation:
+spa <- spec.aggs[code%in%c("FOOD","NRG"), ]
+hicp.data[time>="2019-12-01",
+          aggregate(x=dec_ratio, w0=weight, id=coicop,
+                    agg=spa$composition,
+                    settings=list(names=spa$code)), 
+          by="time"]
+
+# compute overall index excluding food and energy by disaggregation
+hicp.data[time>="2019-12-01",
+          disaggregate(x=dec_ratio, w0=weight, id=coicop,
+                       agg=list("00"=c("FOOD","NRG")),
+                       settings=list(names="TOT_X_FOOD_NRG")), 
+          by="time"]
+```
+The resulting aggregates can finally be chained and rebased as shown before.
+
+User-defined functions can be passed to `aggregate()` as well, which allows aggregation using various weighted or unweighted bilateral index formulas. By contrast, the function `disaggregate()` requires the underlying data to be aggregated as a Laspeyres-type index.
 
 ## Rates of change and contributions
 
-The indices show the price change between a comparison period and the index reference period. However, data users are more often interested in monthly and annual rates of change. Monthly change rates are computed by dividing the index in the current period by the index one month before, while annual change rates are derived by comparing the index in the current month to the index in the same month one year before. Both can be easily derived using function `rates()`. Contributions of the price changes of individual items to the annual rate of change can be computed by the Ribe or Kirchner contributions as implemented in function `contrib()`.
+The HICP indices show the price change between a comparison period and the index reference period. However, data users are more often interested in monthly and annual rates of change.
+
+Monthly change rates are computed by dividing the index in the current period by the index one month before, while annual change rates are derived by comparing the index in the current month to the index in the same month one year before. Both can be easily derived using the function `rates()`. Contributions of the price changes of individual items to the annual rate of change can be computed by the Ribe or Kirchner contributions as implemented in the function `contrib()`.
 ```{r warning=FALSE, fig.width=7, fig.align="center"}
 # compute annual rates of change for the all-items HICP:
-hicp.data[, "ar" := rates(x=index, t=time, type="annual"), by=c("geo","coicop")]
+hicp.data[, "ar" := rates(x=index, t=time, type="year"), by=c("geo","coicop")]
 
 # add all-items hicp:
 hicp.data <- merge(x=hicp.data,
@@ -246,15 +299,74 @@ hicp.data <- merge(x=hicp.data,
                    by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
 
 # ribe decomposition:
-hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, x.all=index_all, w.all=weight_all), by="coicop"]
+hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, 
+                              x.all=index_all, w.all=weight_all, type="year"),
+          by="coicop"]
 
-# annual change rates over time:
+# annual change rates and contribtuions over time:
 plot(ar~time, data=hicp.data[coicop=="00",],
      type="l", xlab="Time", ylab="", ylim=c(-2,12))
-lines(ribe~time, data=hicp.data[coicop=="01"], col="red")
+lines(ribe~time, data=hicp.data[coicop=="011"], col="red")
 title("Contributions of food to overall inflation")
 legend("topleft", col=c("black","red"), lty=1, bty="n", 
        legend=c("Overall inflation (in %)", "Contributions of food (in pp-points)"))
 ```
+
+## Quarterly index series
+
+Most of the calculations shown in the previous two sections can be similarly done for quarterly (or annual) index series. The owner-occupied housing price index (OOHPI) is a prominent example for a chained quarterly price index. The OOHPI indices and weights can be downloaded from Eurostat's database. Below, this is done for the period from 2014 to 2024 for the euro area.
+```{r echo=FALSE}
+load(file.path("data", "ooh_prices.RData"))
+load(file.path("data", "ooh_itemweights.RData"))
+```
+```{r eval=FALSE}
+# download quarterly OOHPI for euro area:
+dtp <- hicp::data(id="prc_hpi_ooq", 
+                  filter=list(unit="I15_Q", geo="EA"),
+                  date.range=c("2014-10","2024-12"))
+
+# download annual OOH weights for euro area:
+dtw <- hicp::data(id="prc_hpi_ooinw", 
+                  filter=list(geo="EA"),
+                  date.range=c("2014","2024"))
+```
+Before calculations can start, any time variables in the data must be put first into proper dates. Afterwards, the indices and weights can be merged into a single data set.
+```{r warning=FALSE}
+# manipulate indices:
+dtp[, c("year","quarter") := tstrsplit(x=time, split="-Q", fixed=TRUE)]
+dtp[, "year":=as.integer(year)]
+dtp[, "quarter":=as.integer(quarter)]
+dtp[, "time":=as.Date(paste(year, quarter*3, "01", sep="-"), format="%Y-%m-%d")]
+dtp[, c("unit","quarter"):=NULL]
+setnames(x=dtp, old="values", new="index")
+
+# manipulate item weights:
+dtw[, "year":=as.integer(time)]
+dtw[, c("unit","time"):=NULL]
+setnames(x=dtw, old="values", new="weight")
+
+# merge indices and item weights:
+dtooh <- merge(x=dtp, y=dtw, by=c("geo","expend","year"), all.x=TRUE)
+setcolorder(x=dtooh, neworder=c("geo","expend","year","time"))
+setkeyv(x=dtooh, cols=c("geo","expend","time"))
+```
+The OOHPI is chained using the fourth quarter of the previous year. Hence, for the aggregation of the OOHPI subcomponents, the indices must first be unchained using the function `unchain()`. The argument `by` of this function should now match to one month of the relevant quarter. Hence, for the fourth quarter, `by` should be set to `10`, `11` or `12`. The unchaining then works as usual.
+```{r}
+# unchain indices:
+dtooh[, "ratio" := unchain(x=index, t=time, by=12L), by="expend"]
+```
+The subcomponents of the OOHPI do not follow the COICOP system. Instead, they are classified into expenditure categories (`expend`). These must be (manually) selected for index aggregation. For example, the total OOHPI is an aggregate of the two categories 'acquisition of dwellings' (`DW_ACQ`) and 'ownership of dwellings' (`DW_OWN`). These two expenditure categories are further broken down into finer ones. In the following, they are used to compute the overall OOHPI, which is finally chained and rebased to the year 2015.
+```{r}
+# aggregate, chain and rebase:
+dtagg <- dtooh[expend%in%c("DW_ACQ","DW_OWN"), list("oohpi"=laspeyres(x=ratio, w0=weight)), by="time"]
+dtagg[, "oohpi" := chain(x=oohpi, t=time)]
+dtagg[, "oohpi" := rebase(x=oohpi, t=time, t.ref="2015")]
+```
+It is important to note that the functions `unchain()`, `chain()` and `rebase()` auto-detect the frequency of the time series. If users prefer to manually define the frequency, the function settings can be changed to `settings=list(freq="quarter")`. The same is true for the derivation of annual (or quarterly) change rates:
+```{r}
+# derive annual change rates:
+dtagg[, "ar" := rates(x=oohpi, t=time, type="year", settings=list(freq="quarter"))]
+```
+The annual change rates `ar` show the percentage change of the overall OOHPI in the current quarter compared to the same quarter one year before. These change rates could be further decomposed into the individual contributions of each expenditure category using the function `contrib()`.
 
 # References

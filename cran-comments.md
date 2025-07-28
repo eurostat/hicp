@@ -1,34 +1,31 @@
-## Resubmission
-This is a submission of an updated package version. In this version I have:
+## Release info
 
-* Fixed a bug in the creation of the vignette on the `r-release-windows-x86_64`-flavor
-
-As this error unfolded only for the Windows-release flavor while all other flavors did not show an error, this resubmission has been submitted only a few days after the previous submission.
+This is a major release adding new functions, adding new features to existing functions and fixing some bugs.
+All changes are documented in the `News.md` file.
 
 ## Test environments
-- R-hub windows-x86_64-devel (r-devel)
-- R-hub ubuntu-gcc-release (r-release)
-- R-hub fedora-clang-devel (r-devel)
+
+* local Windows installation, R 4.4.3
+* win-builder (devel, oldrelease, release) 
 
 ## R CMD check results
-❯ On windows-x86_64-devel (r-devel)
-  checking for non-standard things in the check directory ... NOTE
-  Found the following files/directories:
-    ''NULL''
 
-This seems to be related to the test environment and can be ignored.
+There were no ERRORs or WARNINGs. 
 
-❯ On windows-x86_64-devel (r-devel)
-  checking for detritus in the temp directory ... NOTE
+There were 2 NOTEs:
+```
+❯ checking for future file timestamps ... NOTE
+  unable to verify current time
+```
+This note seems to appear from time to time only, possibly due to some unavailability of the underlying API.
+
+```
+❯ checking for detritus in the temp directory ... NOTE
   Found the following files/directories:
     'lastMiKTeXException'
-
+```
 This seems to be related to the test environment and can be ignored.
 
-❯ On ubuntu-gcc-release (r-release), fedora-clang-devel (r-devel)
-  checking HTML version of manual ... NOTE
-  Skipping checking HTML validation: no command 'tidy' found
+## Reverse dependencies
 
-This seems to be related to the test environment and can be ignored.
-
-0 errors ✔ | 0 warnings ✔ | 3 notes ✖
+There are currently no reverse dependencies for this package
