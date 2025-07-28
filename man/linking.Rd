@@ -8,18 +8,26 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{link()} links a new index series to an existing one by an overlap period supplied. In the resulting linked index series, the new index series starts after the existing one. Function \code{lsf()} computes the level-shift factors for linking via the overlap periods in \code{t.overlap}. The level-shift factors can be applied to an index series that has already been linked by the standard HICP one-month overlap method using December of year \code{t-1}.}
+Function \code{link()} links a new index series (\code{x.new}) to an existing one (\code{x}) using the overlap periods in \code{t.overlap}. In the resulting linked index series, the new index series starts after the existing one.
+
+Function \code{lsf()} computes the level-shift factors for linking via the overlap periods in \code{t.overlap} in comparison to the one-month overlap method using December of year \code{t-1}. The level-shift factors can then be used to shift the index level of a HICP index series.}
 
 \usage{
-link(x, x.new, t, t.overlap=NULL)
+link(x, x.new, t, t.overlap=NULL, settings=list())
 
-lsf(x, x.new, t, t.overlap=NULL)
+lsf(x, x.new, t, t.overlap=NULL, settings=list())
 }
 
 \arguments{
   \item{x, x.new}{numeric vector of index values. \code{NA}-values in the vectors indicate when the index series discontinues (for \code{x}) or starts (for \code{x.new}).}
-  \item{t}{date vector}
-  \item{t.overlap}{character specifying the overlap period to be used. Could be a whole year (\code{YYYY}) or a single year-month (\code{YYYY-MM}). Multiple periods can be provided. If \code{NULL}, all available overlap periods are considered.}
+  \item{t}{date vector in format \code{YYYY-MM-DD} with monthly frequency, that is, one observation per month. Quarterly and yearly frequencies are also supported.}
+  \item{t.overlap}{character specifying the overlap period either in format \code{YYYY} for a calendar year or \code{YYYY-MM} for a specific month or quarter. Multiple periods can be provided. If \code{NULL}, all intersecting periods in \code{x} and \code{x.new} are used.}
+  \item{settings}{list of control settings to be used. The following settings are supported:
+  \itemize{
+    \item \code{chatty} : logical indicating if package-specific warnings and info messages should be printed or not. The default is \code{getOption("hicp.chatty")}.
+    \item \code{freq} : character specifying the frequency of \code{t}. Allowed values are \code{month}, \code{quarter}, \code{year}, and \code{auto} (the default). For \code{auto}, the frequency is internally derived from \code{t}.
+    \item \code{na.rm} : logical indicating if averages for calendar years should also be computed when there are \code{NA}s and less than 12 months (or 4 quarters) present (for \code{na.rm=TRUE}).
+    }}
 }
 
 \value{
@@ -42,10 +50,10 @@ x.old[t>as.Date("2021-12-01")] <- NA # current index discontinues in 2021
 x.new[t<as.Date("2020-01-01")] <- NA # new index starts in 2019-12
 
 # linking in new index in different periods:
-plot(x=t, y=link(x=x.old, x.new=x.new, t=t, t.overlap="2021-12"),
-     col="red", type="l", xlab=NA, ylab="Index", ylim=c(80,120))
-lines(x=t, y=link(x=x.old, x.new=x.new, t=t, t.overlap="2020"), col="blue")
-lines(x=t, y=link(x=x.old, x.new=x.new, t=t, t.overlap="2021"), col="green")
+matplot(x=t, 
+        y=link(x=x.old, x.new=x.new, t=t, t.overlap=c("2021-12","2020","2021")), 
+        col=c("red","blue","green"), type="l", lty=1, 
+        xlab=NA, ylab="Index", ylim=c(80,120))
 lines(x=t, y=x.old, col="black")
 abline(v=as.Date("2021-12-01"), lty="dashed")
 legend(x="topleft",
@@ -63,8 +71,8 @@ x.new.chained <- link(x=x.old, x.new=x.new, t=t, t.overlap="2021-12")
 
 # level-shift adjustment:
 x.new.adj <- ifelse(test=t>as.Date("2021-12-01"),
-                yes=x.new.chained*lsf(x=x.old, x.new=x.new, t=t, t.overlap="2020"),
-                no=x.new.chained)
+                    yes=x.new.chained*lsf(x=x.old, x.new=x.new, t=t, t.overlap="2020"),
+                    no=x.new.chained)
 
 # compare:
 all.equal(x.new.adj, link(x=x.old, x.new=x.new, t=t, t.overlap="2020"))
