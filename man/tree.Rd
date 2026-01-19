@@ -93,7 +93,7 @@ options(hicp.chatty=FALSE) # suppress package messages and warnings
 
 # load HICP item weights:
 coicops <- hicp::data(id="prc_hicp_inw",
-                      filter=list(geo=c("EA","DE","FR")), 
+                      filters=list(geo=c("EA","DE","FR")), 
                       date.range=c("2005", NA))
 coicops <- coicops[grepl("^CP", coicop),]
 coicops[, "coicop":=gsub("^CP", "", coicop)]

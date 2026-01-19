@@ -129,7 +129,7 @@ options(restatapi_cores=1)  # set cores for testing on CRAN
 options(hicp.chatty=FALSE)  # suppress package messages and warnings
 
 # import monthly price indices:
-prc <- hicp::data(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
+prc <- hicp::data(id="prc_hicp_midx", filters=list(unit="I15", geo="EA"))
 prc[, "time":=as.Date(paste0(time, "-01"))]
 prc[, "year":=as.integer(format(time, "\%Y"))]
 setnames(x=prc, old="values", new="index")
@@ -138,7 +138,7 @@ setnames(x=prc, old="values", new="index")
 prc[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
 
 # import item weights:
-inw <- hicp::data(id="prc_hicp_inw", filter=list(geo="EA"))
+inw <- hicp::data(id="prc_hicp_inw", filters=list(geo="EA"))
 inw[, "time":=as.integer(time)]
 setnames(x=inw, old=c("time","values"), new=c("year","weight"))
 

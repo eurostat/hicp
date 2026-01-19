@@ -91,7 +91,7 @@ options(restatapi_cores=1) # set cores for testing on CRAN
 options(hicp.chatty=FALSE) # suppress package messages and warnings
 
 # get hicp index values for euro area with base 2015:
-dt <- hicp::data(id="prc_hicp_midx", filter=list(unit="I15", geo="EA"))
+dt <- hicp::data(id="prc_hicp_midx", filters=list(unit="I15", geo="EA"))
 dt[, "time":=as.Date(paste0(time, "-01"))]
 setkeyv(x=dt, cols=c("unit","coicop","time"))
 

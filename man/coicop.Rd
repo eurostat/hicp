@@ -116,7 +116,7 @@ options(restatapi_cores=1) # set cores for testing on CRAN
 options(hicp.chatty=FALSE) # suppress package messages and warnings
 
 # load hicp item weights of euro area:
-coicops <- hicp::data(id="prc_hicp_inw", filter=list(geo="EA"))
+coicops <- hicp::data(id="prc_hicp_inw", filters=list(geo="EA"))
 coicops <- coicops[grepl("^CP", coicop),]
 coicops[, "coicop":=gsub("^CP", "", coicop)]
 

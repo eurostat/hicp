@@ -1,7 +1,7 @@
 # START
 
 # Title:  Create and export test data
-# Date:   22 July 2025
+# Date:   19 January 2026
 # Author: Sebastian Weinand
 
 # load packages:
@@ -17,13 +17,13 @@ GEO <- "EA"
 
 
 # load data: 
-dtmp <- hicp::data(id="prc_hicp_midx", filter=list(unit="I15", geo=GEO)) # monthly price indices
-dtmr <- hicp::data(id="prc_hicp_mmor", filter=list(geo=GEO)) # monthly rates of change
-dtar <- hicp::data(id="prc_hicp_manr", filter=list(geo=GEO)) # annual rates of change
-dtar12m <- hicp::data(id="prc_hicp_mv12r", filter=list(geo=GEO)) # 12-month average rates of change
+dtmp <- hicp::data(id="prc_hicp_midx", filters=list(unit="I15", geo=GEO)) # monthly price indices
+dtmr <- hicp::data(id="prc_hicp_mmor", filters=list(geo=GEO)) # monthly rates of change
+dtar <- hicp::data(id="prc_hicp_manr", filters=list(geo=GEO)) # annual rates of change
+dtar12m <- hicp::data(id="prc_hicp_mv12r", filters=list(geo=GEO)) # 12-month average rates of change
 dtctrb <- hicp::data(id="prc_hicp_ctrb") # contributions to EA inflation
-dta <- hicp::data(id="prc_hicp_aind", filter=list(geo=GEO)) # annual average indices and rates of change
-dtw <- hicp::data(id="prc_hicp_inw", filter=list(geo=GEO)) # annual item weights
+dta <- hicp::data(id="prc_hicp_aind", filters=list(geo=GEO)) # annual average indices and rates of change
+dtw <- hicp::data(id="prc_hicp_inw", filters=list(geo=GEO)) # annual item weights
 
 # merge all monthly data sets:
 dtm <- merge(x=dtmp[, list(coicop,geo,time,"index"=values)],
@@ -80,10 +80,10 @@ save(dtw, file=test_path(fp, "dtw.RData"))
 rm(list=c("dtm","dta","dtw"))
 
 # load data: 
-dtp <- hicp::data(id="prc_hpi_ooq", filter=list(unit="I15_Q", geo=GEO)) # quarterly indices
-dtqr <- hicp::data(id="prc_hpi_ooq", filter=list(unit="RCH_Q", geo=GEO)) # quarterly rates of change
-dtar <- hicp::data(id="prc_hpi_ooq", filter=list(unit="RCH_A", geo=GEO)) # annual rates of change
-dtw <- hicp::data(id="prc_hpi_ooinw", filter=list(geo=GEO)) # annual item weights
+dtp <- hicp::data(id="prc_hpi_ooq", filters=list(unit="I15_Q", geo=GEO)) # quarterly indices
+dtqr <- hicp::data(id="prc_hpi_ooq", filters=list(unit="RCH_Q", geo=GEO)) # quarterly rates of change
+dtar <- hicp::data(id="prc_hpi_ooq", filters=list(unit="RCH_A", geo=GEO)) # annual rates of change
+dtw <- hicp::data(id="prc_hpi_ooinw", filters=list(geo=GEO)) # annual item weights
 
 # merge all quarterly data sets:
 dtq <- merge(x=dtp, 
