@@ -1,6 +1,7 @@
 ## Release info
 
-This is a major release adding new functions, adding new features to existing functions and fixing some bugs.
+This is a minor resubmission fixing a few errors in the package tests, which resulted from an API non-response.
+These errors occurred during the CRAN package checks.
 All changes are documented in the `News.md` file.
 
 ## Test environments
@@ -12,7 +13,7 @@ All changes are documented in the `News.md` file.
 
 There were no ERRORs or WARNINGs. 
 
-There were 2 NOTEs:
+There were 3 NOTEs:
 ```
 ❯ checking for future file timestamps ... NOTE
   unable to verify current time
@@ -26,6 +27,17 @@ This note seems to appear from time to time only, possibly due to some unavailab
 ```
 This seems to be related to the test environment and can be ignored.
 
+```
+> Found the following (possibly) invalid URLs:
+  URL: https://data.europa.eu/doi/10.2785/055028
+    From: man/chaining.Rd
+          man/index.aggregation.Rd
+          man/rates.Rd
+    Status: 404
+    Message: Not Found
+```
+This DOI is valid and the URL works.
+
 ## Reverse dependencies
 
-There are currently no reverse dependencies for this package
+There are currently no reverse dependencies for this package.
