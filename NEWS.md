@@ -1,4 +1,4 @@
-# hicp 1.0.1
+# hicp 1.0.2
 
 1. All defaults for the arguments of `datasets()`, `datafilters()` and `data()` can be changed by `...`. 
 Before, this was not possible for some internally set defaults.
