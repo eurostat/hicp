@@ -49,7 +49,7 @@ if(ncol(dt3)>0L){
   expect_equal(names(dt3), c("coicop","geo","time","values"))
   expect_equal(unique(as.character(dt3$geo)), "EA")
   expect_equal(unique(as.character(dt3$coicop)), c("CP01","CP02"))
-  expect_equal(min(as.integer(dt3$time)), y.min)
+  expect_equal(min(as.integer(dt3$time)), as.integer(y.min))
 }
 
 
