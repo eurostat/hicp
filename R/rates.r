@@ -2,7 +2,7 @@
 
 # Title:  Change rates and contributions
 # Author: Sebastian Weinand
-# Date:   22 July 2025
+# Date:   26 January 2026
 
 # compute change rates:
 rates <- function(x, t, type="year", settings=list()){
@@ -138,7 +138,7 @@ contrib <- function(x, w, t, x.all, w.all, type="year", settings=list()){
   }
   
   # contributions to change rates between years:
-  between <- function(x, x.all, w, w.all, y, m, ym, method, type){
+  between <- function(x, x.all, w, w.all, y, m, ym, method, type, chatty){
     
     # this function follows Section 8.6.3 of the HICP Manual
     
@@ -161,7 +161,7 @@ contrib <- function(x, w, t, x.all, w.all, type="year", settings=list()){
       # compute this-year term and last-year term:
       ty <- x.all.rescaled[idx]*(x-1)*(w/w.all)
       ly <- ((x.rescaled-1)*(w.rescaled/w.all.rescaled))[idx]
-      if(getOption("hicp.chatty") && any(abs(ly[t12])>0.0001 & m[t12]<type, na.rm=TRUE)){
+      if(settings$chatty && any(abs(ly[t12])>0.0001 & m[t12]<type, na.rm=TRUE)){
         warning("Last year term in December deviates from 0. Something might be wrong here.", call.=FALSE)
       }
       res <- ty+ly
@@ -183,7 +183,7 @@ contrib <- function(x, w, t, x.all, w.all, type="year", settings=list()){
   res <- 100*data.table::fcase(
     m>type, within(x=x0, x.all=x.all0, w=w, w.all=w.all, y=y, m=m, ym=ym, type=type),
     m==type, (x0-1)*(w/w.all), 
-    m<type, between(x=x0, x.all=x.all0, w=w, w.all=w.all, y=y, m=m, ym=ym, type=type, method=method)
+    m<type, between(x=x0, x.all=x.all0, w=w, w.all=w.all, y=y, m=m, ym=ym, type=type, method=method, chatty=settings$chatty)
   )
   
   # print output to console:
