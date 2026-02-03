@@ -1,6 +1,7 @@
 # START
 
-options("hicp.chatty"=FALSE)
+# set global options:
+options(hicp.chatty=FALSE)
 
 
 # Function rates() --------------------------------------------------------
@@ -441,60 +442,97 @@ expect_equal(
 expect_equal(dt1$ar, dt2$ar)
 
 
-# Comparison to published data --------------------------------------------
+# Comparison to published HICP ECOICOP ver. 1 data ------------------------
 
 
-### HICP
-
-# import data:
-load(test_path("testdata","dta.RData"))
-load(test_path("testdata","dtm.RData"))
-load(test_path("testdata","dtw.RData"))
+# load data:
+load(test_path("testdata","dthicp1m.RData"))
+load(test_path("testdata","dthicp1a.RData"))
 
 ## Change rates
 
 # compute monthly, annual and 12-month average rates of change:
-dtcomp <- copy(dtm)
+dtcomp <- copy(dthicp1m)
 dtcomp[, "mr_own":=rates(x=index, t=time, type="month"), by="coicop"]
 dtcomp[, "ar_own":=rates(x=index, t=time, type="year"), by="coicop"]
 dtcomp[, "index_12mar":=convert(x=index, t=time, type="12mavg"), by="coicop"]
 dtcomp[, "12mar_own":=rates(x=index_12mar, t=time, type="year"), by="coicop"]
-
-# compare to published change rates:
-expect_equal(0, nrow(dtcomp[!is.na(mr) & abs(mr-mr_own)>0.1,]))
-expect_equal(0, nrow(dtcomp[!is.na(ar) & abs(ar-ar_own)>0.1,]))
-expect_equal(0, nrow(dtcomp[!is.na(`12mar`) & abs(`12mar`-`12mar_own`)>0.1,]))
+expect_equal(nrow(dtcomp[!is.na(mr) & abs(mr-mr_own)>0.1,]), 0)
+expect_equal(nrow(dtcomp[!is.na(ar) & abs(ar-ar_own)>0.1,]), 0)
+expect_equal(nrow(dtcomp[!is.na(`12mar`) & abs(`12mar`-`12mar_own`)>0.1,]), 0)
 
 # annual average rate of change:
-dtcomp <- copy(dta)
+dtcomp <- copy(dthicp1a)
 dtcomp[, "rate_own":=rates(x=index, t=time, type="year"), by=c("geo","coicop")]
+expect_equal(nrow(dtcomp[!is.na(ar) & abs(ar-rate_own)>0.1,]), 0)
 
-# compare to published change rates:
-expect_equal(0, nrow(dtcomp[!is.na(rate) & abs(rate-rate_own)>0.1,]))
 
 ## Ribe contributions
 
-# merge price indices and item weights:
-dtcomp <- merge(x=dtm, y=dtw, by=c("geo","coicop","year"), all.x=TRUE)
-
-# add all-items hicp:
-dtcomp <- merge(x=dtcomp,
-                y=dtcomp[coicop=="CP00", list(geo,time,index,weight)],
+# add all-items HICP:
+dtcomp <- merge(x=dthicp1m,
+                y=dthicp1m[coicop=="CP00", list(geo,time,index,coicop_weight)],
                 by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
 
 # ribe decomposition:
-dtcomp[, "ribe_own" := contrib(x=index, w=weight, t=time, 
-                                  x.all=index_all, w.all=weight_all,
-                                  type="year", settings=list(method="ribe")), 
+dtcomp[, "ribe_own" := contrib(x=index, w=coicop_weight, t=time, 
+                               x.all=index_all, w.all=coicop_weight_all,
+                               type="year", settings=list(method="ribe")), 
        by=c("geo","coicop")]
 
 # compare to published contributions:
-expect_equal(0, nrow(dtcomp[!is.na(ribe) & abs(ribe-ribe_own)>0.1, ]))
+expect_equal(nrow(dtcomp[!is.na(ribe) & abs(ribe-ribe_own)>0.1, ]), 0)
 
-### OOHPI
 
-# import data:
+# Comparison to published HICP ECOICOP ver. 2 data ------------------------
+
+
+# load data:
+load(test_path("testdata","dthicp2m.RData"))
+load(test_path("testdata","dthicp2a.RData"))
+
+
+## Change rates
+
+# compute monthly, annual and 12-month average rates of change:
+dtcomp <- copy(dthicp2m)
+dtcomp[, "mr_own":=rates(x=index, t=time, type="month"), by="coicop18"]
+dtcomp[, "ar_own":=rates(x=index, t=time, type="year"), by="coicop18"]
+dtcomp[, "index_12mar":=convert(x=index, t=time, type="12mavg"), by="coicop18"]
+dtcomp[, "12mar_own":=rates(x=index_12mar, t=time, type="year"), by="coicop18"]
+expect_equal(nrow(dtcomp[!is.na(mr) & abs(mr-mr_own)>0.1,]), 0)
+expect_equal(nrow(dtcomp[!is.na(ar) & abs(ar-ar_own)>0.1,]), 0)
+expect_equal(nrow(dtcomp[!is.na(`12mar`) & abs(`12mar`-`12mar_own`)>0.1,]), 0)
+
+# annual average rate of change:
+dtcomp <- copy(dthicp2a)
+dtcomp[, "rate_own":=rates(x=index, t=time, type="year"), by=c("geo","coicop18")]
+expect_equal(nrow(dtcomp[!is.na(ar) & abs(ar-rate_own)>0.1,]), 0)
+
+
+## Ribe contributions
+
+# add all-items HICP:
+dtcomp <- merge(x=dthicp2m,
+                y=dthicp2m[coicop18=="TOTAL", list(geo,time,index,coicop18_weight)],
+                by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
+
+# ribe decomposition:
+dtcomp[, "ribe_own" := contrib(x=index, w=coicop18_weight, t=time, 
+                               x.all=index_all, w.all=coicop18_weight_all,
+                               type="year", settings=list(method="ribe")), 
+       by=c("geo","coicop18")]
+
+# compare to published contributions:
+expect_equal(nrow(dtcomp[!is.na(ribe) & abs(ribe-ribe_own)>0.1, ]), 0)
+
+
+# Comparison to published OOH data ----------------------------------------
+
+
+# load data:
 load(test_path("testdata","dtooh.RData"))
+
 
 ## Change rates
 
@@ -502,21 +540,20 @@ load(test_path("testdata","dtooh.RData"))
 dtcomp <- copy(dtooh)
 dtcomp[, "qr_own":=rates(x=index, t=time, type="quarter"), by="expend"]
 dtcomp[, "ar_own":=rates(x=index, t=time, type="year"), by="expend"]
+expect_equal(nrow(dtcomp[!is.na(qr) & abs(qr-qr_own)>0.1,]), 0)
+expect_equal(nrow(dtcomp[!is.na(ar) & abs(ar-ar_own)>0.1,]), 0)
 
-# compare to published change rates:
-expect_equal(0, nrow(dtcomp[!is.na(qr) & abs(qr-qr_own)>0.1,]))
-expect_equal(0, nrow(dtcomp[!is.na(ar) & abs(ar-ar_own)>0.1,]))
 
 ## Ribe contributions
 
 # add all-items oohpi:
 dttmp <- merge(x=dtcomp,
-               y=dtcomp[expend=="TOTAL", list(geo,time,index,weight)],
+               y=dtcomp[expend=="TOTAL", list(geo,time,index,expend_weight)],
                by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
 
 # ribe decompositions of change rates:
-dttmp[, "ar" := contrib(x=index, w=weight, t=time, x.all=index_all, w.all=weight_all, type="year"), by="expend"]
-dttmp[, "qr" := contrib(x=index, w=weight, t=time, x.all=index_all, w.all=weight_all, type="quarter"), by="expend"]
+dttmp[, "ar" := contrib(x=index, w=expend_weight, t=time, x.all=index_all, w.all=expend_weight_all, type="year"), by="expend"]
+dttmp[, "qr" := contrib(x=index, w=expend_weight, t=time, x.all=index_all, w.all=expend_weight_all, type="quarter"), by="expend"]
 
 # check sums:
 dtcomp <- merge(
@@ -525,7 +562,7 @@ dtcomp <- merge(
   by="time", all.x=TRUE, sort=FALSE)
 
 # compare sum of contributions to total change rate:
-expect_equal(0, nrow(dtcomp[!is.na(ar_sum) & abs(ar_own-ar_sum)>0.1, ]))
-expect_equal(0, nrow(dtcomp[!is.na(qr_sum) & abs(qr_own-qr_sum)>0.1, ]))
+expect_equal(nrow(dtcomp[!is.na(ar_sum) & abs(ar_own-ar_sum)>0.1, ]), 0)
+expect_equal(nrow(dtcomp[!is.na(qr_sum) & abs(qr_own-qr_sum)>0.1, ]), 0)
 
 # END

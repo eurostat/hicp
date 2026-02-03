@@ -1,6 +1,10 @@
 # START
 
-options("hicp.chatty"=FALSE)
+# set global options:
+options(hicp.chatty=FALSE)
+options(hicp.coicop.prefix="") # no prefix
+options(hicp.coicop.version="ecoicop2.hicp")
+options(hicp.all.items.code="TOTAL")
 
 
 # Bilateral indices -------------------------------------------------------
@@ -10,14 +14,14 @@ options("hicp.chatty"=FALSE)
 p <- 1:4
 w0 <- c(0.5, 0.1, 0.3, 0.1)
 wt <- c(0.45, 0.1, 0.25, 0.2)
-expect_equal(length(jevons(x=p)), 1L)
-expect_equal(length(carli(x=p)), 1L)
-expect_equal(length(harmonic(x=p)), 1L)
-expect_equal(length(laspeyres(x=p, w0=w0)), 1L)
-expect_equal(length(paasche(x=p, wt=wt)), 1L)
-expect_equal(length(fisher(x=p, w0=w0, wt=wt)), 1L)
-expect_equal(length(toernqvist(x=p, w0=w0, wt=wt)), 1L)
-expect_equal(length(walsh(x=p, w0=w0, wt=wt)), 1L)
+expect_length(jevons(x=p), 1L)
+expect_length(carli(x=p), 1L)
+expect_length(harmonic(x=p), 1L)
+expect_length(laspeyres(x=p, w0=w0), 1L)
+expect_length(paasche(x=p, wt=wt), 1L)
+expect_length(fisher(x=p, w0=w0, wt=wt), 1L)
+expect_length(toernqvist(x=p, w0=w0, wt=wt), 1L)
+expect_length(walsh(x=p, w0=w0, wt=wt), 1L)
 
 # some NAs lead to renormalization of weights:
 p <- c(1:3, NA)
@@ -43,7 +47,7 @@ expect_equal(fisher(x=p, w0=w0, wt=wt), fisher(x=p[idxD], w0=w0[idxD], wt=wt[idx
 expect_equal(toernqvist(x=p, w0=w0, wt=wt), toernqvist(x=p[idxD], w0=w0[idxD], wt=wt[idxD]))
 expect_equal(walsh(x=p, w0=w0, wt=wt), walsh(x=p[idxD], w0=w0[idxD], wt=wt[idxD]))
 
-# incomplete cases only lead to NA as output:
+# incomplete cases lead to NA as output:
 p <- c(1:3, NA)
 w0 <- c(NA, NA, 0.3, 0.1)
 wt <- c(0.45, 0.1, NA, 0.2)
@@ -101,7 +105,7 @@ expect_equal(
   disaggregate(x=x1, w0=w1, id=c("a1","a2","a3","a4"), agg=list())
 )
 
-# expect numer of rows to be identical to length(agg) even if no data:
+# expect number of rows to be identical to length(agg) even if no data:
 expect_equal(
   data.table("id"=as.character(1:2),"w0"=NA_real_,"laspeyres"=NA_real_),
   aggregate(x=numeric(), w0=numeric(), id=character(), agg=list("a","b"))
@@ -125,7 +129,7 @@ dt <- data.table(
   "weight_lag"=rep(c(0.03,0.12,0.33,0.2,0.32), times=2))
 
 # aggregate with package function:
-res.pkg <- dt[, aggregate.tree(x=price, w0=weight, wt=weight_lag, id=coicop), by="time"]
+res.pkg1 <- dt[, aggregate.tree(x=price, w0=weight, wt=weight_lag, id=coicop), by="time"]
 
 # aggregate manually:
 A <- dt[coicop%in%c("01111","01112"),
@@ -147,7 +151,7 @@ C1[, "coicop":="01"]
 C2 <- dt[coicop%in%"021", list(time, "coicop"="02", price, weight, weight_lag)]
 
 D <- rbindlist(l=list(C1,C2))
-D <- D[, list("coicop"="00",
+D <- D[, list("coicop"="TOTAL",
               "price"=laspeyres(x=price, w0=weight),
               "weight"=sum(weight),
               "weight_lag"=sum(weight_lag)),
@@ -161,10 +165,18 @@ res.own <- rbindlist(
 res.own[is.na(is_aggregated), "is_aggregated":=FALSE]
 setorderv(x=res.own, c("time","coicop"))
 setnames(x=res.own, c("time","id","laspeyres","w0","wt","is_aggregated"))
-setcolorder(x=res.own, neworder=names(res.pkg))
+setcolorder(x=res.own, neworder=names(res.pkg1))
 
 # compare results:
-expect_equal(res.own, res.pkg)
+expect_equal(res.own, res.pkg1)
+
+# no aggregation if invalid COICOP codes:
+res.pkg2 <- dt[, aggregate.tree(x=price, w0=weight, wt=weight_lag, id=paste0("CP", coicop)), by="time"]
+expect_equal(nrow(res.pkg2), 0L)
+
+# identical results if COICOP prefix expected:
+res.pkg3 <- dt[, aggregate.tree(x=price, w0=weight, wt=weight_lag, id=paste0("CP", coicop), settings=list(coicop.prefix="CP")), by="time"]
+expect_equal(res.pkg1$laspeyres, res.pkg3$laspeyres)
 
 # check output:
 expect_equal(
@@ -207,17 +219,9 @@ expect_equal(
 )
 
 # check for errors:
-expect_error(
-  dt[, aggregate.tree(x=price, w0=weight, formula=laspeyres), by="time"]
-)
-
-expect_error(
-  dt[, aggregate.tree(x=price, id=coicop, formula=laspeyres), by="time"]
-)
-
-expect_error(
-  dt[, aggregate.tree(x=price, id=coicop, wt=weight, formula=list(mean)), by="time"]
-)
+expect_error(dt[, aggregate.tree(x=price, w0=weight, formula=laspeyres), by="time"])
+expect_error(dt[, aggregate.tree(x=price, id=coicop, formula=laspeyres), by="time"])
+expect_error(dt[, aggregate.tree(x=price, id=coicop, wt=weight, formula=list(mean)), by="time"])
 
 # data containing bundle codes:
 dt <- data.table(
@@ -226,131 +230,145 @@ dt <- data.table(
   "weight"=c(1,0.7,0.3,0.3,0.5,0.4,0.1,0.2,0.2))
 
 # bundle code is not used in aggregation so it should not be part of results:
-A <- dt[, aggregate.tree(x=price, w0=weight, id=coicop)]
-B <- dt[c(1,2,3,4,6,7,8), aggregate.tree(x=price, w0=weight, id=coicop)]
-
+A <- dt[, aggregate.tree(x=price, w0=weight, id=coicop, settings=list(coicop.version="ecoicop1.hicp"))]
+B <- dt[c(1,2,3,4,6,7,8), aggregate.tree(x=price, w0=weight, id=coicop, settings=list(coicop.version="ecoicop1.hicp"))]
 expect_true(!"08X"%in%A$id)
 expect_true(!"08X"%in%B$id)
-expect_equal(A[id=="00", list(w0,laspeyres)], B[id=="00", list(w0,laspeyres)])
+expect_equal(A[id=="TOTAL", list(w0,laspeyres)], B[id=="TOTAL", list(w0,laspeyres)])
 
 # bundle code is used in aggregation so it should be part of results:
-C <- dt[1:4, aggregate.tree(x=price, w0=weight, id=coicop)]
-D <- dt[c(1,2,3,4,8,9), aggregate.tree(x=price, w0=weight, id=coicop)]
-
+C <- dt[1:4, aggregate.tree(x=price, w0=weight, id=coicop, settings=list(coicop.version="ecoicop1.hicp"))]
+D <- dt[c(1,2,3,4,8,9), aggregate.tree(x=price, w0=weight, id=coicop, settings=list(coicop.version="ecoicop1.hicp"))]
 expect_true("08X"%in%C$id)
 expect_true("08X"%in%D$id)
-expect_equal(C[id=="00", list(w0,laspeyres)], D[id=="00", list(w0,laspeyres)])
+expect_equal(C[id=="TOTAL", list(w0,laspeyres)], D[id=="TOTAL", list(w0,laspeyres)])
 
 
-# Comparison to published data --------------------------------------------
+# Comparison to published HICP ECOICOP ver. 1 data ------------------------
 
 
-# import data:
-load(test_path("testdata","dtw.RData"))
-load(test_path("testdata","dtm.RData"))
+# set global options:
+options(hicp.coicop.version="ecoicop1.hicp")
+options(hicp.coicop.prefix="CP")
+options(hicp.all.items.code="CP00")
 
-# unchaining indices:
-dtm[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
+# load data:
+load(test_path("testdata","dthicp1m.RData"))
 
-# derive coicop tree at lowest possible level:
-dtw[grepl("^CP",coicop),
-    "tree":=tree(id=gsub("^CP","",coicop), w=weight, flag=TRUE, settings=list(w.tol=0.1)),
-    by=c("geo","year")]
-
-# # except for rounding, we receive total weight of 1000 in each period:
-# dtw[tree==TRUE, sum(weight), by="year"]
-
-# merge price indices and item weights:
-dtall <- merge(x=dtm, y=dtw, by=c("geo","coicop","year"), all.x=TRUE)
-dtall <- dtall[year <= year(Sys.Date())-1,]
-dtall[, "coicop" := gsub(pattern="^CP", replacement="", x=coicop)]
+# unchain indices for aggregation:
+dthicp1m[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
 
 # compute all-items HICP in one step:
-hicp.own <- dtall[tree==TRUE,
-                  list("laspey"=laspeyres(x=dec_ratio, w0=weight)),
-                  by="time"]
+dthicp1m[coicop_weight>0 & !is.na(dec_ratio),
+         "tree":=tree(id=coicop, w=coicop_weight, flag=TRUE, settings=list(w.tol=0.1)),
+         by=c("geo","time")]
+# dthicp1m[tree==TRUE, sum(coicop_weight), by="time"]
+hicp.own <- dthicp1m[tree==TRUE, 
+                     list("laspeyres"=laspeyres(x=dec_ratio, w0=coicop_weight)), 
+                     by="time"]
 setorderv(x=hicp.own, cols="time")
-hicp.own[, "chain_laspey" := chain(x=laspey, t=time, by=12)]
-hicp.own[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015")]
-
-# add published all-items HICP for comparison:
-hicp.own <- merge(
-  x=hicp.own,
-  y=dtall[coicop=="00", list(time, index)],
-  by="time",
-  all.x=TRUE)
-
-# there should be no differences:
-expect_equal(
-  0,
-  nrow(hicp.own[!is.na(index) & abs(index-chain_laspey_15)>0.1,])
-)
+hicp.own[, "index_chained" := chain(x=laspeyres, t=time, by=12)]
+hicp.own[, "index_own" := rebase(x=index_chained, t=time, t.ref="2015")]
+hicp.own <- merge(x=hicp.own[, list(time, index_own)], y=dthicp1m[coicop=="CP00", list(time, "index_publ"=index)], by="time", all.x=TRUE)
+expect_equal(nrow(hicp.own[!is.na(index_publ) & abs(index_publ-index_own)>0.1,]), 0)
 
 # compute all-items HICP step-wise through all higher-levels:
-hicp.own.all <- dtall[, aggregate.tree(x=dec_ratio, w0=weight, id=coicop, formula=laspeyres), by="time"]
+hicp.own.all <- dthicp1m[coicop_weight>0 & !is.na(dec_ratio),
+                         aggregate.tree(x=dec_ratio, w0=coicop_weight, id=coicop, formula=laspeyres),
+                         by="time"]
 setorderv(x=hicp.own.all, cols="time")
-hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="id"]
-hicp.own.all[, "chain_laspey_15" := rebase(x=chain_laspey, t=time, t.ref="2015"), by="id"]
-
-# add published indices for comparison:
-hicp.own.all <- merge(
-  x=hicp.own.all,
-  y=dtall[, list(time,"id"=coicop,index,weight)],
-  by=c("time","id"),
-  all.x=TRUE)
-
-# # DO NOT TEST ON THIS:
-# hicp.own.all[!is.na(index) & abs(index-chain_laspey_15)>0.1,] # should be empty
-# hicp.own.all[!is.na(weight) & abs(w0-weight)>0.1,] # should be empty
-
-# compare all-items HICP from direct and step-wise aggregation:
-dtcomp <- merge(
-  x=hicp.own.all[id=="00", list(time, "index_stpwse"=chain_laspey_15)],
-  y=hicp.own[, list(time, "index_direct"=chain_laspey_15)],
-  by="time")
-
-# there should be no differences:
-expect_equal(
-  0,
-  nrow(dtcomp[abs(index_stpwse-index_direct)>0.1,])
-)
+hicp.own.all[, "index_chained" := chain(x=laspeyres, t=time, by=12), by="id"]
+hicp.own.all[, "index_own" := rebase(x=index_chained, t=time, t.ref="2015"), by="id"]
+# hicp.own.all <- merge(
+#   x=hicp.own.all[, list(id,time,index_own,"weight_own"=w0)],
+#   y=dthicp1m[, list("id"=coicop,time,"index_publ"=index,coicop_weight)],
+#   by=c("time","id"),
+#   all.x=TRUE)
+dtcomp <- merge(x=hicp.own.all[id=="CP00", list(time, "index_gradual"=index_own)], y=hicp.own[, list(time, "index_direct"=index_own)], by="time")
+expect_equal(nrow(dtcomp[abs(index_gradual-index_direct)>0.1,]), 0)
 
 # compare special aggregates computed by aggregate():
-aggs1 <- spec.aggs[code%in%c("FOOD","NRG"), ]
-dtspagg1 <- dtall[time>="2019-12-01", 
-                  aggregate(x=dec_ratio, w0=weight, id=coicop, 
-                            agg=aggs1$composition,
-                            settings=list(names=aggs1$code)), 
-                  by="time"]
-
-dtcomp <- merge(
-  x=dtall[, list(time,"id"=coicop,weight,dec_ratio)],
-  y=dtspagg1,
-  by=c("id","time"), 
-  all.y=TRUE)
-
-expect_equal(
-  0,
-  nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,])
-)
+aggs1 <- spec.agg(id=c("FOOD","NRG"))
+dtspagg1 <- dthicp1m[time>=as.Date("2017-01-01"),
+                     aggregate(x=dec_ratio, w0=coicop_weight, id=coicop, 
+                               agg=aggs1, 
+                               settings=list(names=names(aggs1))), 
+                     by="time"]
+dtcomp <- merge(x=dthicp1m[, list(time,"id"=coicop,coicop_weight,dec_ratio)], y=dtspagg1, by=c("id","time"), all.y=TRUE)
+expect_equal(nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,]), 0)
 
 # compare special aggregates computed by disaggregate():
-aggs2 <- list("00"=c("FOOD","NRG"), "00"="FUEL")
-dtspagg2 <- dtall[time>="2019-12-01", 
-                  disaggregate(x=dec_ratio, w0=weight, id=coicop, 
-                               agg=aggs2,
-                               settings=list(names=c("TOT_X_NRG_FOOD","TOT_X_FUEL"))), 
-                  by="time"]
+aggs2 <- list("CP00"=c("FOOD","NRG"), "CP00"="FUEL")
+dtspagg2 <- dthicp1m[time>=as.Date("2017-01-01"), 
+                     disaggregate(x=dec_ratio, w0=coicop_weight, id=coicop, 
+                                  agg=aggs2,
+                                  settings=list(names=c("TOT_X_NRG_FOOD","TOT_X_FUEL"))), 
+                     by="time"]
+dtcomp <- merge(x=dthicp1m[, list(time,"id"=coicop,coicop_weight,dec_ratio)], y=dtspagg2, by=c("id","time"), all.y=TRUE)
+expect_equal(nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,]), 0)
 
-dtcomp <- merge(
-  x=dtall[, list(time,"id"=coicop,weight,dec_ratio)],
-  y=dtspagg2,
-  by=c("id","time"), 
-  all.y=TRUE)
 
-expect_equal(
-  0,
-  nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,])
-)
+# Comparison to published HICP ECOICOP ver. 2 data ------------------------
+
+
+# set global options:
+options(hicp.coicop.version="ecoicop2.hicp")
+options(hicp.coicop.prefix="CP")
+options(hicp.all.items.code="TOTAL")
+
+# load data:
+load(test_path("testdata","dthicp2m.RData"))
+
+# unchain indices for aggregation:
+dthicp2m[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
+
+# compute all-items HICP in one step:
+dthicp2m[coicop18_weight>0 & !is.na(dec_ratio),
+         "tree":=tree(id=coicop18, w=coicop18_weight, flag=TRUE, settings=list(w.tol=0.1)),
+         by=c("geo","time")]
+# dthicp2m[tree==TRUE, sum(coicop18_weight), by="time"]
+hicp.own <- dthicp2m[tree==TRUE, 
+                     list("laspeyres"=laspeyres(x=dec_ratio, w0=coicop18_weight)),
+                     by="time"]
+setorderv(x=hicp.own, cols="time")
+hicp.own[, "index_chained" := chain(x=laspeyres, t=time, by=12)]
+hicp.own[, "index_own" := rebase(x=index_chained, t=time, t.ref="2025")]
+hicp.own <- merge(x=hicp.own[, list(time, index_own)], y=dthicp2m[coicop18=="TOTAL", list(time, "index_publ"=index)], by="time", all.x=TRUE)
+expect_equal(nrow(hicp.own[!is.na(index_publ) & abs(index_publ-index_own)>0.1,]), 0)
+
+# compute all-items HICP step-wise through all higher-levels:
+hicp.own.all <- dthicp2m[coicop18_weight>0 & !is.na(dec_ratio),
+                         aggregate.tree(x=dec_ratio, w0=coicop18_weight, id=coicop18, formula=laspeyres), 
+                         by="time"]
+setorderv(x=hicp.own.all, cols="time")
+hicp.own.all[, "index_chained" := chain(x=laspeyres, t=time, by=12), by="id"]
+hicp.own.all[, "index_own" := rebase(x=index_chained, t=time, t.ref="2025"), by="id"]
+# hicp.own.all <- merge(
+#   x=hicp.own.all[, list(id,time,index_own,"weight_own"=w0)],
+#   y=dthicp2m[, list("id"=coicop18,time,"index_publ"=index,coicop18_weight)],
+#   by=c("time","id"),
+#   all.x=TRUE)
+dtcomp <- merge(x=hicp.own.all[id=="TOTAL", list(time, "index_gradual"=index_own)], y=hicp.own[, list(time, "index_direct"=index_own)], by="time")
+expect_equal(nrow(dtcomp[abs(index_gradual-index_direct)>0.1,]), 0)
+
+# compare special aggregates computed by aggregate():
+aggs1 <- spec.agg(id=c("FOOD","NRG"))
+dtspagg1 <- dthicp2m[time>=as.Date("2019-12-01"),
+                     aggregate(x=dec_ratio, w0=coicop18_weight, id=coicop18, 
+                               agg=aggs1, 
+                               settings=list(exact=FALSE, names=names(aggs1))), 
+                     by="time"]
+dtcomp <- merge(x=dthicp2m[, list(time,"id"=coicop18,coicop18_weight,dec_ratio)], y=dtspagg1, by=c("id","time"), all.y=TRUE)
+expect_equal(nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,]), 0)
+
+# compare special aggregates computed by disaggregate():
+aggs2 <- list("TOTAL"=c("FOOD","NRG"), "TOTAL"="FUEL")
+dtspagg2 <- dthicp2m[time>=as.Date("2019-12-01"), 
+                     disaggregate(x=dec_ratio, w0=coicop18_weight, id=coicop18, 
+                                  agg=aggs2,
+                                  settings=list(names=c("TOT_X_NRG_FOOD","TOT_X_FUEL"))), 
+                     by="time"]
+dtcomp <- merge(x=dthicp2m[, list(time,"id"=coicop18,coicop18_weight,dec_ratio)], y=dtspagg2, by=c("id","time"), all.y=TRUE)
+expect_equal(nrow(dtcomp[100*abs(dec_ratio-laspeyres)>0.1,]), 0)
 
 # END

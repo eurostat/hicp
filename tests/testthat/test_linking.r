@@ -1,6 +1,7 @@
 # START
 
-options("hicp.chatty"=FALSE)
+# set global options:
+options(hicp.chatty=FALSE)
 
 # input data:
 t <- seq.Date(from=as.Date("2020-01-01"), to=as.Date("2023-12-01"), by="1 month")

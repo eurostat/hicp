@@ -1,6 +1,7 @@
 # START
 
-options("hicp.chatty"=FALSE)
+# set global options:
+options(hicp.chatty=FALSE)
 
 
 # Functions unchain() and chain() -----------------------------------------
@@ -829,36 +830,61 @@ expect_equal(
 )
 
 
-# Comparison to published data --------------------------------------------
+# Comparison to published HICP ECOICOP ver. 1 data ------------------------
 
 
-# import data:
-load(test_path("testdata","dta.RData"))
-load(test_path("testdata","dtm.RData"))
+# load data:
+load(test_path("testdata","dthicp1m.RData"))
+load(test_path("testdata","dthicp1a.RData"))
 
 # check chain-linked indices against published data:
-dtcomp <- copy(dtm)
+dtcomp <- copy(dthicp1m)
 dtcomp[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
 dtcomp[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop"]
 dtcomp[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="coicop"]
-
-# there should be no differences:
-expect_equal(
-  0,
-  nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01 & !(coicop=="CP07369" & year>2023),])
-)
-### there seems to be a problem in the data for CP07369 so we exclude it here
+expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01 & !(coicop=="CP07369" & year>2023),]), 0)
+# there seems to be a problem in the data for CP07369 so we exclude it here
 
 # check converted indices against published data:
-dtown <- dtm[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop"]
+dtown <- dthicp1m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop"]
 setnames(x=dtown, c("coicop","time","index_own"))
-dtown[, "time":=as.Date(time)]
-dtcomp <- merge(x=dta, y=dtown, by=c("coicop","time"), all=TRUE)
+dtown[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
+dtcomp <- merge(x=dthicp1a, y=dtown, by=c("coicop","time"), all=TRUE)
+expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
 
-# there should be no differences:
-expect_equal(
-  0,
-  nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,])
-)
+
+# Comparison to published HICP ECOICOP ver. 2 data ------------------------
+
+
+# load data:
+load(test_path("testdata","dthicp2m.RData"))
+load(test_path("testdata","dthicp2a.RData"))
+
+# check chain-linked indices against published data:
+dtcomp <- copy(dthicp2m)
+dtcomp[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
+dtcomp[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop18"]
+dtcomp[, "index_own" := rebase(x=chained_index, t=time, t.ref="2025"), by="coicop18"]
+expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+
+# check converted indices against published data:
+dtown <- dthicp2m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop18"]
+setnames(x=dtown, c("coicop18","time","index_own"))
+dtown[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
+dtcomp <- merge(x=dthicp2a, y=dtown, by=c("coicop18","time"), all=TRUE)
+expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+
+
+# Comparison to published OOH data ----------------------------------------
+
+
+# load data:
+load(test_path("testdata","dtooh.RData"))
+
+# check chain-linked indices against published data:
+dtooh[, "dec_ratio" := unchain(x=index, t=time), by="expend"]
+dtooh[, "chained_index" := chain(x=dec_ratio, t=time), by="expend"]
+dtooh[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="expend"]
+expect_equal(nrow(dtooh[!is.na(index) & abs(index-index_own)>0.01,]), 0)
 
 # END

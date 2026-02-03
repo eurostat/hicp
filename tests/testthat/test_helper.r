@@ -1,69 +1,145 @@
 # START
 
-options("hicp.chatty"=FALSE)
+# # set global options::
+options(hicp.chatty=FALSE)
+options(hicp.coicop.prefix="") # no prefix
+options(hicp.coicop.version="ecoicop2.hicp")
+options(hicp.all.items.code="TOTAL")
 
 
-# set.coicop() ------------------------------------------------------------
+# dictionary() ------------------------------------------------------------
 
 
-expect_no_error(set.coicop("ecoicop"))
-expect_no_error(set.coicop("ecoicop.hicp"))
-expect_no_error(set.coicop("coicop1999"))
-expect_no_error(set.coicop("coicop2018"))
+expect_error(dictionary(x="COICOP", which="CODE", settings=list(coicop.version="test")))
+
+settings <- list(
+  "coicop.version"="ecoicop1.hicp", 
+  "coicop.prefix"=getOption("hicp.coicop.prefix"))
+
+expect_type(dictionary(x="COICOP", which="CODE", settings=settings), "character")
+expect_type(dictionary(x="COICOP", which="LABEL", settings=settings), "character")
+expect_type(dictionary(x="COICOP", which="DEF", settings=settings), "list")
+
+expect_type(dictionary(x="BDL", which="CODE", settings=settings), "character")
+expect_type(dictionary(x="BDL", which="LABEL", settings=settings), "character")
+expect_type(dictionary(x="BDL", which="DEF", settings=settings), "list")
+
+expect_type(dictionary(x="SA", which="CODE", settings=settings), "character")
+expect_type(dictionary(x="SA", which="LABEL", settings=settings), "character")
+expect_type(dictionary(x="SA", which="DEF", settings=settings), "list")
+
+
+# unbundle() --------------------------------------------------------------
+
+
+# empty character:
+expect_equal(
+  unbundle(character()), 
+  list()
+)
+
+# no changes if no bundles:
+expect_equal(
+  unbundle(id=c(NA,"01","CP08"), settings=list(simplify=TRUE)),
+  setNames(c(NA,"01","CP08"), c(NA,"01","CP08"))         
+)
+
+res <- c(NA,"01","08","082","083","1212","1213","1212")
+names(res) <- c(NA,"01","08","08X","08X","1212_1213","1212_1213","1212")
+expect_equal(
+  unbundle(
+    id=c(NA,"01","08","08X","1212_1213","1212"), 
+    settings=list(simplify=TRUE, coicop.version="ecoicop1.hicp")),
+  res
+)
+
+res <- c("081","082","083","082","083")
+names(res) <- c("081","08X","08X","082_083","082_083")
+expect_equal(
+  unbundle(
+    id=c("081","08X","082_083"), 
+    settings=list(simplify=TRUE, coicop.version="ecoicop1.hicp")),
+  res
+)
 
 
 # keep.bundle() -----------------------------------------------------------
 
 
+# keep everything if no bundles:
+expect_all_true(
+  keep.bundle(id=c(NA,"00","08","081","CP082"))
+)
+
+
 expect_equal(
-  c(T,T,T,T,T),
-  keep.bundle(id=c(NA,"00","08","081","08X"))
+  keep.bundle(
+    id=c(NA,"00","08","081","08X"), 
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,T,T)
 )
 
 expect_equal(
-  c(T,T,T,T,T,F),
-  keep.bundle(id=c(NA,"00","08","081","08X","082"))
+  keep.bundle(
+    id=c(NA,"00","08","081","08X","082"),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,T,T,F)
 )
 
 expect_equal(
-  c(T,T,T,T,F,T,T),
-  keep.bundle(id=c(NA,"00","08","081","08X","082","083"))
+  keep.bundle(
+    id=c(NA,"00","08","081","08X","082","083"),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,T,F,T,T)
 )
 
 expect_equal(
-  c(T,T,T,T,T,T),
-  keep.bundle(id=c(NA,"00","08","081","082","083"))
+  keep.bundle(
+    id=c(NA,"00","08","081","082","083"),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,T,T,T)
 )
 
 # now with by given:
 expect_equal(
-  c(T,T,T, T,T,T),
-  keep.bundle(id=c("08","081","08X", "08","081","08X"), 
-              by=rep(1:2, each=3))
+  keep.bundle(
+    id=c("08","081","08X", "08","081","08X"), 
+    by=rep(1:2, each=3),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T, T,T,T)
 )
 
 expect_equal(
-  c(T,T,T,F, T,T,T,F),
-  keep.bundle(id=c("08","081","08X","082", "08","081","08X","082"),
-              by=rep(1:2, each=4))
+  keep.bundle(
+    id=c("08","081","08X","082", "08","081","08X","082"),
+    by=rep(1:2, each=4),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,F, T,T,T,F)
 )
 
 expect_equal(
-  c(T,T,F,T,T, T,T,F,T,T),
-  keep.bundle(id=c("08","081","08X","082","083", "08","081","08X","082","083"),
-              by=rep(1:2, each=5))
+  keep.bundle(
+    id=c("08","081","08X","082","083", "08","081","08X","082","083"),
+    by=rep(1:2, each=5),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,F,T,T, T,T,F,T,T)
 )
 
 expect_equal(
-  c(T,T,T,F, T,T,T,F,F),
-  keep.bundle(id=c("08","081","08X","082", "08","081","08X","082","083"),
-              by=rep(1:2, times=c(4,5)))
+  keep.bundle(
+    id=c("08","081","08X","082", "08","081","08X","082","083"),
+    by=rep(1:2, times=c(4,5)),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,T,F, T,T,T,F,F)
+  
 )
 
 expect_equal(
-  c(T,T,F,T, T,T,T,T),
-  keep.bundle(id=c("08","081","08X","082", "08","081","082","083"),
-              by=rep(1:2, each=4))
+  keep.bundle(
+    id=c("08","081","08X","082", "08","081","082","083"),
+    by=rep(1:2, each=4),
+    settings=list(coicop.version="ecoicop1.hicp")),
+  c(T,T,F,T, T,T,T,T)
 )
 
 
