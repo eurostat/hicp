@@ -1,22 +1,177 @@
 # START
 
-# Title:  Global helper functions (non exported)
-# Author: Sebastian Weinand
-# Date:   22 July 2025
+# Title:    Global helper functions (non exported)
+# Author:   Sebastian Weinand
+# Date:     27 January 2026
 
-# set coicop dictionary:
-set.coicop <- function(x){
+
+# COICOP ------------------------------------------------------------------
+
+
+# make code dictionary:
+dict.codes <- function(x, settings=list()){
   
-  # match arguments:
-  ver <- match.arg(arg=x, choices=c("ecoicop","ecoicop.hicp","ecoicop2","coicop1999","coicop2018"))
+  # @args:
+  # x         one of [ALL,COICOP,BDL,SA,AP]
+  # settings  settings for COICOP version and prefix
   
-  # select the coicop version:
-  switch(EXPR = x, 
-         "ecoicop"=coicop[["ecoicop"]], 
-         "ecoicop.hicp"=coicop[["ecoicop.hicp"]],
-         "ecoicop2"=coicop[["ecoicop2"]],
-         "coicop1999"=coicop[["coicop1999"]],
-         "coicop2018"=coicop[["coicop2018"]])
+  # match inputs:
+  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
+  
+  if(x=="ALL"){
+    # create full dictionary:
+    d <- data.table::rbindlist(l=lapply(
+      X=list("COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap),
+      FUN=function(z) subset(z, select=c("version","id"))),
+      idcol="concept")
+  }else{
+    # select specific ditionary:
+    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
+    d[["concept"]] <- x
+  }
+  
+  # output:
+  d <- d[d$version%in%v,]
+  if(nrow(d)>0L){
+    d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+  }
+  res <- as.character(sort(d[["id"]]))
+  return(res)
+  
+}
+
+# make label dictionary:
+dict.labels <- function(x, settings=list()){
+  
+  # @args:
+  # x         one of [ALL,COICOP,BDL,SA,AP]
+  # settings  settings for COICOP version and prefix
+  
+  # match inputs:
+  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
+  
+  if(x=="ALL"){
+    # create full dictionary:
+    d <- data.table::rbindlist(l=lapply(
+      X=list("COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap),
+      FUN=function(z) subset(z, select=c("version","id","name"))),
+      idcol="concept")
+  }else{
+    # select specific dictionary:
+    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
+    d[["concept"]] <- x
+  }
+  
+  # output:
+  d <- d[d$version%in%v,]
+  if(nrow(d)>0L){
+    d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+  }
+  res <- stats::setNames(d[["name"]], d[["id"]])
+  res <- res[order(names(res))]
+  return(res)
+  
+}
+
+# make dictionary for definitions of aggregates:
+dict.defs <- function(x, settings=list()){
+  
+  # @args:
+  # x         one of [ALL,COICOP,BDL,SA,AP]
+  # settings  settings for COICOP version and prefix
+  
+  # match inputs:
+  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
+  
+  if(x=="ALL"){
+    # create full dictionary:
+    d <- data.table::rbindlist(l=lapply(
+      X=list("BDL"=dict.bundles, "SA"=dict.spec.aggs),
+      FUN=function(z) subset(z, select=c("version","id","def"))),
+      idcol="concept")
+  }else{
+    # select specific dictionary:
+    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
+    d[["concept"]] <- x
+  }
+  
+  # output:
+  d <- d[d$version%in%v,]
+  if(nrow(d)>0L){
+    
+    # add prefix to codes:
+    res <- lapply(
+      X=d[["def"]], 
+      FUN=function(z) paste0(settings$coicop.prefix, z))
+    
+    # add prefix also to list names:
+    if(length(res)>0L){
+      names(res) <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+    }
+    
+  }else{
+    
+    # empty list:
+    res <- stats::setNames(list(), character())
+    
+  }
+  
+  return(res)
+  
+}
+
+# main function to create a dictionary:
+dictionary <- function(x, which, settings=list()){
+  
+  # @args:
+  # x         one of [ALL,COICOP,BDL,SA,AP]
+  # which     one of [CODE,LABEL,DEF]
+  # settings  settings for COICOP version and prefix
+  
+  x <- match.arg(arg=x, choices=c("ALL","COICOP","BDL","SA","AP"))
+  which <- match.arg(arg=which, choices=c("CODE","LABEL","DEF"))
+  if(which=="LABEL")  res <- dict.labels(x=x, settings=settings)
+  if(which=="CODE") res <- dict.codes(x=x, settings=settings)
+  if(which=="DEF") res <- dict.defs(x=x, settings=settings)
+  return(res)
+  
+}
+
+# resolve COICOP bundle codes into their components:
+unbundle <- function(id, settings=list()){
+  
+  # @args:
+  # id        character vector of COICOP codes
+  # settings  list of control settings [coicop.version, simplify]
+  
+  # set default settings if missing:
+  if(is.null(settings$coicop.version)) settings$coicop.version <- getOption("hicp.coicop.version")
+  if(is.null(settings$coicop.prefix)) settings$coicop.prefix <- getOption("hicp.coicop.prefix")
+  if(is.null(settings$simplify)) settings$simplify <- FALSE
+  
+  # match id to bundle dictionary:
+  dict <- dictionary(x="BDL", which="DEF", settings=settings)
+  if(is.null(dict) || length(dict)<1L){
+    out <- as.list(id)
+  }else{
+    out <- dict[match(x=id, table=names(dict))]
+    names(out) <- NULL
+    idx <- lengths(out)<1L
+    out[idx] <- id[idx]
+  }
+  
+  # simplify list to vector:
+  if(settings$simplify){
+    if(length(out)>0){
+      # length might be greater now!
+      out <- stats::setNames(unlist(x=out, use.names=FALSE), rep(id, lengths(out)))
+    }else{
+      out <- id
+    }
+  }
+  
+  # return output:
+  return(out)
   
 }
 
@@ -37,14 +192,10 @@ keep.bundle <- function(id, by=NULL, settings=list()){
   # by        factor, grouping variable 
   # settings  see is.bundle() and unbundle()
   
-  # overwrite:
-  settings$simplify <- FALSE
-  
-  # define logical:
+  # define output: 
   res <- rep(x=TRUE, times=length(id))
-  
-  # flag bundles:
-  bdl.flag <- hicp::is.bundle(id=id, settings=settings)
+  settings$simplify <- FALSE # overwrite settings
+  bdl.flag <- is.bundle(id=id, settings=settings)
   
   # if any bundles present:
   if(any(bdl.flag, na.rm=TRUE)){
@@ -56,16 +207,9 @@ keep.bundle <- function(id, by=NULL, settings=list()){
       idtab <- Reduce(f=intersect, x=split(id, by))
     } 
     
-    # unique bundle codes:
-    bdls <- unique(id[bdl.flag])
-    
-    # check if bundle codes are present in intersecting ids:
-    bdls.idx <- bdls%in%idtab
-    
-    # unbundle bundle codes:
-    bdls.clean <- hicp::unbundle(id=bdls, settings=settings)
-    
-    # loop over bundles:
+    bdls <- unique(id[bdl.flag]) # unique bundle codes
+    bdls.idx <- bdls%in%idtab # bundle codes present in intersecting ids
+    bdls.clean <- unbundle(id=bdls, settings=settings)
     for(j in seq_along(bdls)){
       
       if(!all(bdls.clean[[j]]%in%idtab) & bdls.idx[j]){
@@ -82,6 +226,10 @@ keep.bundle <- function(id, by=NULL, settings=list()){
   return(res)
   
 }
+
+
+# Dates -------------------------------------------------------------------
+
 
 # number of periods per year defining the frequency of t:
 nperiods <- function(t, tol=1e-6){
@@ -235,6 +383,10 @@ lag.yearmonth <- function(y, m, n=0){
   return(out)
   
 }
+
+
+# Others ------------------------------------------------------------------
+
 
 # compute average(s) based on minimum number of observations:
 navg <- function(x, g=NULL, n=12L, na.rm=FALSE){

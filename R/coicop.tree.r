@@ -2,7 +2,7 @@
 
 # Title:      COICOP tree
 # Author:     Sebastian Weinand
-# Date:       22 July 2025
+# Date:       27 January 2026
 
 # non-exported helper function to check weight sum including coicop bundles:
 check.weightsum <- function(id, w, w.all, w.tol=1/100, settings=list()){
@@ -23,7 +23,7 @@ check.weightsum <- function(id, w, w.all, w.tol=1/100, settings=list()){
   # settings  see is.bundle()
   
   # set default settings if missing:
-  if(is.null(settings$coicop.bundles)) settings$coicop.bundles <- getOption("hicp.coicop.bundles")
+  if(is.null(settings$coicop.version)) settings$coicop.version <- getOption("hicp.coicop.version")
   
   # flag bundle codes:
   bdl.flag <- hicp::is.bundle(id=id, settings=settings)
@@ -34,7 +34,8 @@ check.weightsum <- function(id, w, w.all, w.tol=1/100, settings=list()){
   
   # keep bundle codes but drop bundle components and check weight sum:
   if(any(bdl.flag, na.rm=TRUE)){
-    incl <- !id%in%unique(unlist(x=settings$coicop.bundles, use.names=FALSE))
+    dict <- dictionary(x="BDL", which="DEF", settings=settings)
+    incl <- !id%in%unique(unlist(x=dict, use.names=FALSE))
     check.incl <- abs(sum(w[incl], na.rm=TRUE)-w.all) < w.tol
   }else{
     incl <- check.incl <- FALSE
@@ -183,8 +184,8 @@ tree <- function(id, by=NULL, w=NULL, flag=FALSE, settings=list()){
   
   # set default settings if missing:
   if(is.null(settings$coicop.version)) settings$coicop.version <- getOption("hicp.coicop.version")
+  if(is.null(settings$coicop.prefix)) settings$coicop.prefix <- getOption("hicp.coicop.prefix")
   if(is.null(settings$all.items.code)) settings$all.items.code <- getOption("hicp.all.items.code")
-  if(is.null(settings$coicop.bundles)) settings$coicop.bundles <- getOption("hicp.coicop.bundles")
   if(is.null(settings$w.tol)) settings$w.tol <- 1/100
   if(is.null(settings$max.lvl)) settings$max.lvl <- NULL
   if(is.null(settings$chatty)) settings$chatty <- getOption("hicp.chatty")
@@ -202,8 +203,8 @@ tree <- function(id, by=NULL, w=NULL, flag=FALSE, settings=list()){
   check.num(x=settings$max.lvl, min.len=1, max.len=1, null.ok=TRUE, na.ok=FALSE, int=c(0,Inf))
   check.num(x=settings$w.tol, min.len=1, max.len=1, na.ok=FALSE, int=c(0,Inf))
   check.char(x=settings$coicop.version, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$coicop.prefix, min.len=1, max.len=1, na.ok=FALSE)
   check.char(x=settings$all.items.code, min.len=1, max.len=1, na.ok=FALSE)
-  check.list(x=settings$coicop.bundles, min.len=0, names=TRUE)
   check.log(x=settings$chatty, min.len=1, max.len=1, na.ok=FALSE)
   
   # set all-items code:
@@ -225,7 +226,7 @@ tree <- function(id, by=NULL, w=NULL, flag=FALSE, settings=list()){
   by <- by[!nas]
   
   # resolve level of coicop bundles:
-  lvl <- hicp::level(id=id, label=FALSE, settings=settings)
+  lvl <- hicp::level(id=id, settings=settings)
   
   # prepare groups:
   if(is.null(by)){

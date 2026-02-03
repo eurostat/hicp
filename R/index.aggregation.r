@@ -1,8 +1,8 @@
 # START
 
-# Title:  Index number methods and aggregation
-# Author: Sebastian Weinand
-# Date:   25 July 2025
+# Title:    Index number methods and aggregation
+# Author:   Sebastian Weinand
+# Date:     26 January 2026
 
 # bilateral index functions:
 jevons <- function(x){
@@ -519,8 +519,8 @@ aggregate.tree <- function(x, w0, wt, id, formula=laspeyres, settings=list()){
   
   # set defaults:
   if(is.null(settings$coicop.version)) settings$coicop.version <- getOption("hicp.coicop.version")
+  if(is.null(settings$coicop.prefix)) settings$coicop.prefix <- getOption("hicp.coicop.prefix")
   if(is.null(settings$all.items.code)) settings$all.items.code <- getOption("hicp.all.items.code")
-  if(is.null(settings$coicop.bundles)) settings$coicop.bundles <- getOption("hicp.coicop.bundles")
   if(is.null(settings$chatty)) settings$chatty <- getOption("hicp.chatty")
   
   # input checks:
@@ -530,8 +530,8 @@ aggregate.tree <- function(x, w0, wt, id, formula=laspeyres, settings=list()){
   check.char(x=id, min.len=0)
   check.lengths(x=x, y=id)
   check.char(x=settings$coicop.version, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=settings$coicop.prefix, min.len=1, max.len=1, na.ok=FALSE)
   check.char(x=settings$all.items.code, min.len=1, max.len=1, na.ok=FALSE)
-  check.list(x=settings$coicop.bundles, min.len=0, names=TRUE)
   check.log(x=settings$chatty, min.len=1, max.len=1, na.ok=FALSE)
   
   # input checks on weights:
@@ -540,7 +540,6 @@ aggregate.tree <- function(x, w0, wt, id, formula=laspeyres, settings=list()){
   check.lengths(x=x, y=w0)
   check.lengths(x=x, y=wt)
   
-  # input checks on formula:
   # input checks on formula:
   # we have to substitute first; otherwise, if x=laspeyres and 
   # formula=laspeyres, formula would be overwritten by x
