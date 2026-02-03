@@ -10,11 +10,12 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{unchain()} unchains a chained index series.
-These unchained index series can be aggregated into higher-level indices using \code{\link[=aggregate]{aggregate()}}.
-To obtain a long-term index series, the higher-level indices must be chained using function \code{chain()}.
-Function \code{rebase()} sets the index reference period.
-Monthly indices can be converted into quarterly and yearly indices or 12-month moving averages using function \code{convert()}.}
+The function \code{unchain()} unchains an annually chain-linked index series.
+The unchained indices can be aggregated into higher-level indices, which can be chain-linked using the function \code{chain()} to obtain a long-term index series.
+The function \code{rebase()} sets the reference period of the chain-linked index.
+
+The function \code{convert()} allows to convert monthly indices into quarterly and yearly indices or 12-month moving averages.
+}
 
 \usage{
 unchain(x, t, by=12, settings=list())
@@ -28,7 +29,7 @@ convert(x, t, type="year", settings=list())
 
 \arguments{
   \item{x}{numeric vector of index values.}
-  \item{t}{date vector in format \code{YYYY-MM-DD} with monthly frequency, that is, one observation per month. Quarterly and yearly frequencies are also supported.}
+  \item{t}{date vector of monthly (i.e., one observation per month), quarterly or yearly frequency in format \code{YYYY-MM-DD}.}
   \item{by}{for one-month or one-quarter overlap a single integer between 1 and 12 specifying the price reference period; for annual overlap using a full calendar year \code{NULL}.}
   \item{t.ref}{character specifying the index reference period either in format \code{YYYY} for a calendar year or \code{YYYY-MM} for a specific month or quarter. Can also be \code{first} or \code{last} to use the first or last available period. If \code{t.ref} contains multiple entries, these are processed in the order provided, and the first match is used for the rebasing.}
   \item{type}{type of converted index. Either \code{year} (for annual average), \code{quarter} (for quarterly average), or \code{12mavg} (for a 12-month moving average).}
@@ -41,13 +42,15 @@ convert(x, t, type="year", settings=list())
 }
 
 \value{
-Functions \code{unchain()}, \code{chain()}, \code{rebase()}, and \code{convert(..., type="12mavg")} return numeric values of the same length as \code{x}.
+The functions \code{unchain()}, \code{chain()}, \code{rebase()}, and \code{convert(..., type="12mavg")} return numeric values of the same length as \code{x}.
 
-For \code{type="year"} and \code{type="quarter"}, function \code{convert()} returns a named numeric vector of the length of quarters or years available in \code{t}, where the names correspond to the last month of the year or quarter.
+For \code{type="year"} and \code{type="quarter"}, the function \code{convert()} returns a named numeric vector of the length of quarters or years available in \code{t}, where the names correspond to the last month of the year or quarter.
 }
 
 \details{
-Function \code{unchain()} sets the value of the first price reference period to \code{NA} although the value could be set to 100 (if \code{by} is not \code{NULL}) or 100 divided by the average of the year (if \code{by=NULL}). This is wanted to avoid aggregation of these values. Function \code{chain()} finally sets the values back to 100.
+The function \code{unchain()} sets the value of the first price reference period to \code{NA} although the value could be set to 100 (if \code{by} is not \code{NULL}) or 100 divided by the average of the year (if \code{by=NULL}).
+This is wanted to avoid aggregation of these values.
+The function \code{chain()} finally sets the values back to 100.
 }
 
 \seealso{
@@ -61,11 +64,12 @@ European Commission, Eurostat, \emph{Harmonised Index of Consumer Prices (HICP) 
 \examples{
 ### EXAMPLE 1
 
-t <- seq.Date(from=as.Date("2021-12-01"), to=as.Date("2024-12-01"), by="1 month")
+# sample monthly price index:
+t <- seq.Date(from=as.Date("2022-12-01"), to=as.Date("2025-12-01"), by="1 month")
 p <- rnorm(n=length(t), mean=100, sd=5)
 
 # rebase index to new reference period:
-rebase(x=p, t=t, t.ref=c("1996","2022")) # 1996 not present so 2022 is used
+rebase(x=p, t=t, t.ref=c("1996","2023")) # 1996 not present so 2023 is used
 rebase(x=p, t=t, t.ref=c("1996","first")) # 1996 not present so first period is used
 
 # convert into quarterly index:
@@ -90,20 +94,20 @@ library(restatapi)
 options(restatapi_cores=1) # set cores for testing on CRAN
 options(hicp.chatty=FALSE) # suppress package messages and warnings
 
-# get hicp index values for euro area with base 2015:
-dt <- hicp::data(id="prc_hicp_midx", filters=list(unit="I15", geo="EA"))
-dt[, "time":=as.Date(paste0(time, "-01"))]
-setkeyv(x=dt, cols=c("unit","coicop","time"))
+# import monthly price indices for euro area:
+dtm <- hicp::data(id="prc_hicp_minr", filters=list(unit="I25", geo="EA"))
+dtm[, "time":=as.Date(paste0(time, "-01"))]
+setkeyv(x=dtm, cols=c("unit","coicop18","time"))
 
-# unchain, chain, and rebase all euro area indices by coicop:
-dt[, "dec_ratio" := unchain(x=values, t=time), by="coicop"]
-dt[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop"]
-dt[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="coicop"]
+# unchain, chain, and rebase all euro area indices by COICOP:
+dtm[, "dec_ratio" := unchain(x=values, t=time), by="coicop18"]
+dtm[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop18"]
+dtm[, "index_own" := rebase(x=chained_index, t=time, t.ref="2025"), by="coicop18"]
 
-# convert all euro area indices into annual averages:
-dta <- dt[, as.data.table(
+# convert all monthly indices into annual averages:
+dta <- dtm[, as.data.table(
               x=convert(x=values, t=time, type="year"), 
-              keep.rownames=TRUE), by="coicop"]
-setnames(x=dta, c("coicop","time","index"))
-plot(index~as.Date(time), data=dta[coicop=="CP00",], type="l") # plot all-items index
+              keep.rownames=TRUE), by="coicop18"]
+setnames(x=dta, c("coicop18","time","index"))
+plot(index~as.Date(time), data=dta[coicop18=="TOTAL",], type="l")
 }}

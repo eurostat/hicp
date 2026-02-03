@@ -8,9 +8,9 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{rates()} derives monthly, quarterly and annual rates of change from an index series. 
+The function \code{rates()} derives monthly, quarterly and annual rates of change from an index series. 
 
-Function \code{contrib()} computes the contributions of a subcomponent (e.g., food, energy) to the change rate of the overall index (for chained indices with price reference period December of the previous year).
+The function \code{contrib()} computes the contributions of a subcomponent (e.g., food, energy) to the change rate of the overall index (for chained indices with price reference period December of the previous year).
 }
 
 \usage{
@@ -22,7 +22,7 @@ contrib(x, w, t, x.all, w.all, type="year", settings=list())
 \arguments{
   \item{x, x.all}{numeric vector of index values of the subcomponent (\code{x}) and the overall index (\code{x.all}).}
   \item{w, w.all}{numeric vector of weights of the subcomponent (\code{w}) and the overall index (\code{w.all}).}
-  \item{t}{date vector in format \code{YYYY-MM-DD} with monthly frequency, that is, one observation per month. Quarterly and yearly frequencies are also supported.}
+  \item{t}{date vector of monthly (i.e., one observation per month), quarterly or yearly frequency in format \code{YYYY-MM-DD}.}
   \item{type}{character specifying the type of change rate. Allowed values are \code{month} for monthly change rates, \code{quarter} for quarterly change rates, and \code{year} for annual change rates. See also details.}
   \item{settings}{list of control settings to be used. The following settings are supported:
   \itemize{
@@ -52,8 +52,9 @@ European Commission, Eurostat, \emph{Harmonised Index of Consumer Prices (HICP) 
 \examples{
 ### EXAMPLE 1
 
-p <- rnorm(n=37,mean=100,sd=5)
-t <- seq.Date(from=as.Date("2020-12-01"), by="1 month", length.out=length(p))
+# sample monthly price index:
+t <- seq.Date(from=as.Date("2022-12-01"), to=as.Date("2025-12-01"), by="1 month")
+p <- rnorm(n=length(t), mean=100, sd=5)
 
 # compute change rates:
 rates(x=p, t=t, type="month") # one month to the previous month
@@ -75,34 +76,34 @@ options(restatapi_cores=1)  # set cores for testing on CRAN
 options(hicp.chatty=FALSE)  # suppress package messages and warnings
 
 # import monthly price indices:
-prc <- hicp::data(id="prc_hicp_midx", filters=list(unit="I15", geo="EA"))
-prc[, "time":=as.Date(paste0(time, "-01"))]
-prc[, "year":=as.integer(format(time, "\%Y"))]
-setnames(x=prc, old="values", new="index")
+dtp <- hicp::data(id="prc_hicp_minr", filters=list(unit="I25", geo="EA"))
+dtp[, "time":=as.Date(paste0(time, "-01"))]
+dtp[, "year":=as.integer(format(time, "\%Y"))]
+setnames(x=dtp, old="values", new="index")
 
 # import item weights:
-inw <- hicp::data(id="prc_hicp_inw", filters=list(geo="EA"))
-inw[, "time":=as.integer(time)]
-setnames(x=inw, old=c("time","values"), new=c("year","weight"))
+dtw <- hicp::data(id="prc_hicp_iw", filters=list(geo="EA"))
+dtw[, "time":=as.integer(time)]
+setnames(x=dtw, old=c("time","values"), new=c("year","weight"))
 
 # merge price indices and item weights:
-hicp.data <- merge(x=prc, y=inw, by=c("geo","coicop","year"), all.x=TRUE)
+dtall <- merge(x=dtp, y=dtw, by=c("geo","coicop18","year"), all.x=TRUE)
 
 # add all-items hicp:
-hicp.data <- merge(x=hicp.data,
-                   y=hicp.data[coicop=="CP00", list(geo,time,index,weight)],
-                   by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
+dtall <- merge(x=dtall,
+               y=dtall[coicop18=="TOTAL", list(geo,time,index,weight)],
+               by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
 
-# ribe decomposition:
-hicp.data[, "ribe" := contrib(x=index, w=weight, t=time, 
-                              x.all=index_all, w.all=weight_all,
-                              type="year", settings=list(method="ribe")), by="coicop"]
+# Ribe contributions by COICOP:
+dtall[, "ribe" := contrib(x=index, w=weight, t=time, 
+                          x.all=index_all, w.all=weight_all,
+                          type="year", settings=list(method="ribe")), by="coicop18"]
 
 # plot annual change rates over time:
 plot(rates(x=index, t=time, type="year")~time,
-     data=hicp.data[coicop=="CP00",],
+     data=dtall[coicop18=="TOTAL",],
      type="l", ylim=c(-2,12))
 
 # add contribution of energy to plot:
-lines(ribe~time, data=hicp.data[coicop=="NRG"], col="red")
+lines(ribe~time, data=dtall[coicop18=="NRG"], col="red")
 }}

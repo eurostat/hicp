@@ -8,9 +8,12 @@
 \author{Sebastian Weinand}
 
 \description{
-Function \code{link()} links a new index series (\code{x.new}) to an existing one (\code{x}) using the overlap periods in \code{t.overlap}. In the resulting linked index series, the new index series starts after the existing one.
+The function \code{link()} links a new index series (\code{x.new}) to an existing one (\code{x}) using the overlap periods in \code{t.overlap}. 
+In the resulting linked index series, the new index series starts after the existing one.
 
-Function \code{lsf()} computes the level-shift factors for linking via the overlap periods in \code{t.overlap} in comparison to the one-month overlap method using December of year \code{t-1}. The level-shift factors can then be used to shift the index level of a HICP index series.}
+The function \code{lsf()} computes the level-shift factors for linking via the overlap periods in \code{t.overlap} in comparison to the standard one-month overlap method using December of year \code{t-1}.
+The level-shift factors can then be used to shift the index level of a HICP index series.
+}
 
 \usage{
 link(x, x.new, t, t.overlap=NULL, settings=list())
@@ -20,7 +23,7 @@ lsf(x, x.new, t, t.overlap=NULL, settings=list())
 
 \arguments{
   \item{x, x.new}{numeric vector of index values. \code{NA}-values in the vectors indicate when the index series discontinues (for \code{x}) or starts (for \code{x.new}).}
-  \item{t}{date vector in format \code{YYYY-MM-DD} with monthly frequency, that is, one observation per month. Quarterly and yearly frequencies are also supported.}
+  \item{t}{date vector of monthly (i.e., one observation per month), quarterly or yearly frequency in format \code{YYYY-MM-DD}.}
   \item{t.overlap}{character specifying the overlap period either in format \code{YYYY} for a calendar year or \code{YYYY-MM} for a specific month or quarter. Multiple periods can be provided. If \code{NULL}, all intersecting periods in \code{x} and \code{x.new} are used.}
   \item{settings}{list of control settings to be used. The following settings are supported:
   \itemize{
@@ -31,7 +34,7 @@ lsf(x, x.new, t, t.overlap=NULL, settings=list())
 }
 
 \value{
-Function \code{link()} returns a numeric vector or a matrix of the same length as \code{t}, while \code{lsf()} provides a named numeric vector of the same length as \code{t.overlap}.
+The function \code{link()} returns a numeric vector or a matrix of the same length as \code{t}, while \code{lsf()} provides a named numeric vector of the same length as \code{t.overlap}.
 }
 
 \seealso{
