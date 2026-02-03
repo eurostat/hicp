@@ -1,13 +1,6 @@
-## Resubmission
-
-This is a resubmission, in which I replaced `\url{}` with `\doi{}` for citing the HICP Manual.
-The first submission (see below) let the CRAN checks indicate an invalid URL due to the use of `\url{}`.
-
-
 ## Release info
 
-This is a patch release fixing a few errors in the package tests, which resulted from an API non-response.
-These errors occurred during the CRAN package checks.
+This is a minor release adding a few new functions and features to existing functions and fixing a bug.
 All changes are documented in the `News.md` file.
 
 

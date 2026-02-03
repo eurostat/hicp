@@ -1,3 +1,36 @@
+# hicp 1.1.0
+
+**Breaking changes:**
+
+1. Updated the package's default COICOP version to ECOICOP version 2 for HICP: `options(hicp.coicop.version="ecoicop2.hicp")`.
+
+2. Replaced the data set `spec.aggs` with the function `spec.agg()`, which gives the composition of special aggregates based on the selected COICOP version.
+
+3. Replaced the data set `countries` with the function `countries()`, which gives the names and codes of all countries with HICP data.
+
+4. Removed the global option `options("hicp.coicop.bundles")`. 
+In the new COICOP version `ecoicop2.hicp`, bundle codes are no longer used.
+The COICOP bundles previously used are still internally defined and considered for `ecoicop1.hicp`.
+
+5. Made the function `unbundle()` a non-exported one.
+
+6. Dropped the argument `label` from the function `level()`.
+
+**New features and other changes:**
+
+1. Added the global option `options("hicp.coicop.prefix")` to allow COICOP codes to have a prefix like `CP`.
+
+2. Added the functions `is.ea()`, `is.eu()` and `is.eea()` to indicate if a country belongs to one of the European aggregates.
+
+3. Added the function `is.spec.agg()` to indicate if a code is a special aggregate.
+
+4. Added the function `label()` to label all valid COICOP, bundle and special aggregate codes.
+
+**Bug fixes:**
+
+1. Corrected the use of `settings$chatty` in the function `contrib()`.
+
+
 # hicp 1.0.2
 
 1. All defaults for the arguments of `datasets()`, `datafilters()` and `data()` can be changed by `...`. 
@@ -7,8 +40,8 @@ Before, this was not possible for some internally set defaults.
 
 3. Corrected argument `filter` to `filters` in `data()` for all package examples.
 
-# hicp 1.0.0
 
+# hicp 1.0.0
 
 **Breaking changes:**
 
