@@ -2,137 +2,57 @@
 
 # Title:    Global helper functions (non exported)
 # Author:   Sebastian Weinand
-# Date:     27 January 2026
+# Date:     14 October 2026
 
 
 # COICOP ------------------------------------------------------------------
 
 
-# make code dictionary:
-dict.codes <- function(x, settings=list()){
-  
-  # @args:
-  # x         one of [ALL,COICOP,BDL,SA,AP]
-  # settings  settings for COICOP version and prefix
-  
-  # match inputs:
-  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
-  
-  if(x=="ALL"){
-    # create full dictionary:
-    d <- data.table::rbindlist(l=lapply(
-      X=list("COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap),
-      FUN=function(z) subset(z, select=c("version","id"))),
-      idcol="concept")
-  }else{
-    # select specific ditionary:
-    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
-    d[["concept"]] <- x
-  }
-  
-  # output:
-  d <- d[d$version%in%v,]
-  if(nrow(d)>0L){
-    d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
-  }
-  res <- as.character(sort(d[["id"]]))
-  return(res)
-  
-}
-
-# make label dictionary:
-dict.labels <- function(x, settings=list()){
-  
-  # @args:
-  # x         one of [ALL,COICOP,BDL,SA,AP]
-  # settings  settings for COICOP version and prefix
-  
-  # match inputs:
-  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
-  
-  if(x=="ALL"){
-    # create full dictionary:
-    d <- data.table::rbindlist(l=lapply(
-      X=list("COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap),
-      FUN=function(z) subset(z, select=c("version","id","name"))),
-      idcol="concept")
-  }else{
-    # select specific dictionary:
-    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
-    d[["concept"]] <- x
-  }
-  
-  # output:
-  d <- d[d$version%in%v,]
-  if(nrow(d)>0L){
-    d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
-  }
-  res <- stats::setNames(d[["name"]], d[["id"]])
-  res <- res[order(names(res))]
-  return(res)
-  
-}
-
-# make dictionary for definitions of aggregates:
-dict.defs <- function(x, settings=list()){
-  
-  # @args:
-  # x         one of [ALL,COICOP,BDL,SA,AP]
-  # settings  settings for COICOP version and prefix
-  
-  # match inputs:
-  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
-  
-  if(x=="ALL"){
-    # create full dictionary:
-    d <- data.table::rbindlist(l=lapply(
-      X=list("BDL"=dict.bundles, "SA"=dict.spec.aggs),
-      FUN=function(z) subset(z, select=c("version","id","def"))),
-      idcol="concept")
-  }else{
-    # select specific dictionary:
-    d <- switch(EXPR=x, "COICOP"=dict.coicop, "BDL"=dict.bundles, "SA"=dict.spec.aggs, "AP"=dict.ap)
-    d[["concept"]] <- x
-  }
-  
-  # output:
-  d <- d[d$version%in%v,]
-  if(nrow(d)>0L){
-    
-    # add prefix to codes:
-    res <- lapply(
-      X=d[["def"]], 
-      FUN=function(z) paste0(settings$coicop.prefix, z))
-    
-    # add prefix also to list names:
-    if(length(res)>0L){
-      names(res) <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
-    }
-    
-  }else{
-    
-    # empty list:
-    res <- stats::setNames(list(), character())
-    
-  }
-  
-  return(res)
-  
-}
-
 # main function to create a dictionary:
 dictionary <- function(x, which, settings=list()){
   
   # @args:
-  # x         one of [ALL,COICOP,BDL,SA,AP]
+  # x         one of [COICOP,BDL,SA,AP]
   # which     one of [CODE,LABEL,DEF]
   # settings  settings for COICOP version and prefix
   
-  x <- match.arg(arg=x, choices=c("ALL","COICOP","BDL","SA","AP"))
+  # match inputs:
+  v <- match.arg(arg=settings$coicop.version, choices=c("ecoicop1","ecoicop1.hicp","ecoicop2","ecoicop2.hicp","coicop1999","coicop2018"))
+  x <- match.arg(arg=x, choices=c("COICOP","BDL","SA","AP"), several.ok=TRUE)
   which <- match.arg(arg=which, choices=c("CODE","LABEL","DEF"))
-  if(which=="LABEL")  res <- dict.labels(x=x, settings=settings)
-  if(which=="CODE") res <- dict.codes(x=x, settings=settings)
-  if(which=="DEF") res <- dict.defs(x=x, settings=settings)
+  
+  # update settings:
+  if(identical(x=settings$coicop.prefix, y="")) settings["coicop.prefix"] <- list(NULL)
+  
+  # subset to relevant concepts and COICOP version:
+  d <- dict.prods[dict.prods$concept%in%x & dict.prods$version==v,]
+  
+  # labels:
+  if(which=="LABEL"){
+    if(nrow(d)>0L & !is.null(settings$coicop.prefix)){
+      d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+    }
+    res <- stats::setNames(d[["name"]], d[["id"]])
+  } 
+  
+  # codes:
+  if(which=="CODE"){
+    if(nrow(d)>0L & !is.null(settings$coicop.prefix)){
+      d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+    }
+    res <- stats::setNames(d[["id"]], NULL)
+  } 
+  
+  # definitions:
+  if(which=="DEF"){
+    d <- d[d$concept%in%c("SA","BDL") & lengths(d$def)>0L,]
+    if(nrow(d)>0L & !is.null(settings$coicop.prefix)){
+      d[["def"]] <- lapply(X=d[["def"]], FUN=function(z) paste0(settings$coicop.prefix, z))
+      d[["id"]] <- ifelse(test=d[["concept"]]%in%c("COICOP","BDL"), yes=paste0(settings$coicop.prefix, d[["id"]]), no=d[["id"]])
+    }
+    res <- stats::setNames(d[["def"]], d[["id"]])
+  }
+  
   return(res)
   
 }

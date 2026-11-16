@@ -1,3 +1,48 @@
+# hicp 1.2.0
+
+**Breaking changes:**
+
+1. Functions `aggregate()` and `disaggregate()` now always require all elements specified in `agg` to be present in `id`.
+   Otherwise, `NA` is returned. 
+   Removed the argument `settings$exact` from the functions. 
+   
+2. All bilateral index functions (e.g. `jevons()`) now follow the behavior of `weighted.mean(..., na.rm=FALSE)`.
+   Hence, missing index values are only allowed if the corresponding weight is zero.
+   Otherwise, `NA` is returned   
+
+3. Renamed `contrib()` to `contributions()`, `spec.agg()` to `special.agg()` and `is.spec.agg()` to `is.special.agg()`.
+
+4. Function `special.agg()` now always returns a list of the same length as `id`.
+
+5. Function `countries()` requires no input as it only returns all countries with HICP data.
+
+**New features and other changes:**
+
+1. Introduced the new functions `rate()` and `contribution()` to calculate a change rate and contribution to overall change rate for period of arbitrary length.
+
+2. Functions `contribution()` and `contributions()` gain from optional arguments `x0` and `xagg0`, which allow the calculation of contributions to the change rates of annual averages.
+
+3. Introduced the new function `european.agg()` to provide the countries being part of a European aggregate.
+   This was previously integrated in `countries()`. 
+   This change allowed considerable speed improvements for `european.agg()` as well as `is.ea()`, `is.eu()` and `is.eea()`.
+
+5. Streamlined the bilateral index functions to return `NA` for exceptional cases like infinity prices or weights.
+
+6. Function `is.special.agg()` now also flags administered prices (e.g. `AP`) as valid special aggregates.
+
+7. Updated the label for `FUEL` in ECOICOP ver.2 following the update in Eurobase.
+
+8. Updated the definition for `TOT_X_ALC_TBC` in ECOICOP ver. 2 to include `CP02200`.
+
+9. Updated the output for `hicp::data(..., flags=TRUE)` according to the release of the `restatapi`-version 0.30.0. 
+
+**Bug fixes:**
+
+1. In `contrib()`, contributions were not calculated in the first year a product was newly introduced and in the first year after a product was discontinued.
+   However, these products still/already contribute to the overall price change by their this-year term (for newly introduced products) and the last-year term (for discontinued products).
+   This is changed now and contributions calculated.
+
+
 # hicp 1.1.0
 
 **Breaking changes:**

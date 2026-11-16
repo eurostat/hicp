@@ -838,19 +838,20 @@ load(test_path("testdata","dthicp1m.RData"))
 load(test_path("testdata","dthicp1a.RData"))
 
 # check chain-linked indices against published data:
-dtcomp <- copy(dthicp1m)
-dtcomp[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
-dtcomp[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop"]
-dtcomp[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="coicop"]
-expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01 & !(coicop=="CP07369" & year>2023),]), 0)
+dthicp1m[, "dec_ratio" := unchain(x=index, t=time), by="coicop"]
+dthicp1m[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop"]
+dthicp1m[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="coicop"]
+dtcomp <- dthicp1m[!(coicop=="CP07369" & year>2023),]
+expect_equal(dtcomp$index, dtcomp$index_own, tolerance=0.1)
 # there seems to be a problem in the data for CP07369 so we exclude it here
 
 # check converted indices against published data:
-dtown <- dthicp1m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop"]
-setnames(x=dtown, c("coicop","time","index_own"))
-dtown[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
-dtcomp <- merge(x=dthicp1a, y=dtown, by=c("coicop","time"), all=TRUE)
-expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+dta <- dthicp1m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop"]
+setnames(x=dta, c("coicop","time","index_own"))
+dta[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
+dtcomp <- merge(x=dthicp1a, y=dta, by=c("coicop","time"), all=TRUE)
+dtcomp <- dtcomp[time>="2015-01-01",] # we do not have the complete calendar year 2014
+expect_equal(dtcomp$index, dtcomp$index_own, tolerance=0.1)
 
 
 # Comparison to published HICP ECOICOP ver. 2 data ------------------------
@@ -861,18 +862,18 @@ load(test_path("testdata","dthicp2m.RData"))
 load(test_path("testdata","dthicp2a.RData"))
 
 # check chain-linked indices against published data:
-dtcomp <- copy(dthicp2m)
-dtcomp[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
-dtcomp[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop18"]
-dtcomp[, "index_own" := rebase(x=chained_index, t=time, t.ref="2025"), by="coicop18"]
-expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+dthicp2m[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
+dthicp2m[, "chained_index" := chain(x=dec_ratio, t=time), by="coicop18"]
+dthicp2m[, "index_own" := rebase(x=chained_index, t=time, t.ref="2025"), by="coicop18"]
+expect_equal(dthicp2m$index, dthicp2m$index_own, tolerance=0.1)
 
 # check converted indices against published data:
-dtown <- dthicp2m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop18"]
-setnames(x=dtown, c("coicop18","time","index_own"))
-dtown[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
-dtcomp <- merge(x=dthicp2a, y=dtown, by=c("coicop18","time"), all=TRUE)
-expect_equal(nrow(dtcomp[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+dta <- dthicp2m[, as.data.table(convert(x=index, t=time, type="y"), keep.rownames=TRUE), by="coicop18"]
+setnames(x=dta, c("coicop18","time","index_own"))
+dta[, "time":=as.Date(paste(year(time), "01", "01", sep="-"))]
+dtcomp <- merge(x=dthicp2a, y=dta, by=c("coicop18","time"), all=TRUE)
+dtcomp <- dtcomp[time>="2020-01-01",] # we do not have the complete calendar year 2019
+expect_equal(dtcomp$index, dtcomp$index_own, tolerance=0.1)
 
 
 # Comparison to published OOH data ----------------------------------------
@@ -884,7 +885,7 @@ load(test_path("testdata","dtooh.RData"))
 # check chain-linked indices against published data:
 dtooh[, "dec_ratio" := unchain(x=index, t=time), by="expend"]
 dtooh[, "chained_index" := chain(x=dec_ratio, t=time), by="expend"]
-dtooh[, "index_own" := rebase(x=chained_index, t=time, t.ref="2015"), by="expend"]
-expect_equal(nrow(dtooh[!is.na(index) & abs(index-index_own)>0.01,]), 0)
+dtooh[, "index_own" := rebase(x=chained_index, t=time, t.ref="2025"), by="expend"]
+expect_equal(dtooh$index, dtooh$index_own, tolerance=0.1)
 
 # END

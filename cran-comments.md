@@ -6,13 +6,13 @@ All changes are documented in the `News.md` file.
 
 ## Test environments
 
-* local Windows installation, R 4.4.3
+* local Windows installation, R 4.6.2
 * win-builder (devel, oldrelease, release) 
 
 
 ## R CMD check results
 
-There were no ERRORs or WARNINGs. 
+There were no ERRORs or WARNINGs.
 
 There were 2 NOTEs:
 ```
@@ -20,14 +20,12 @@ There were 2 NOTEs:
   unable to verify current time
 ```
 This note seems to appear from time to time only, possibly due to some unavailability of the underlying API.
-
 ```
 ❯ checking for detritus in the temp directory ... NOTE
   Found the following files/directories:
     'lastMiKTeXException'
 ```
 This seems to be related to the test environment and can be ignored.
-
 
 ## Reverse dependencies
 

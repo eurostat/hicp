@@ -2,25 +2,26 @@
 
 # Title:    European aggregates and countries
 # Author:   Sebastian Weinand
-# Date:     26 January 2026
+# Date:     16 November 2026
 
-# countries with HICP data published:
-countries <- function(group="All", t=Sys.Date()){
+# all countries with HICP data published:
+countries <- function() return(dict.countries)
+
+# composition of European aggregates:
+european.agg <- function(id, t=Sys.Date()){
   
   # input checks:
-  check.char(x=group, min.len=1, max.len=1, na.ok=FALSE)
+  check.char(x=id, min.len=1, max.len=1, na.ok=FALSE)
   check.date(x=t, min.len=1, max.len=1, na.ok=FALSE)
   
   # match input:
-  group <- match.arg(arg=group, choices=c("All","EA","EU","EEA"))
+  id <- match.arg(arg=id, choices=c("EA","EU","EEA"))
   
-  # set output to all countries or subset to specific group:
-  res <- dict.countries
-  if(group=="EA") res <- res[is.ea(id=names(res), t=t)]
-  if(group=="EU") res <- res[is.eu(id=names(res), t=t)]
-  if(group=="EEA") res <- res[is.eea(id=names(res), t=t)]
-  
-  # return output:
+  # composition of European aggregate at specific date:
+  from <- to <- NULL # avoid visible binding note
+  res <- dict.country.aggs[[id]][t>=from & t<=to,]
+  res <- as.character(res$country)
+  #res <- dict.countries[names(dict.countries)%in%res$country]
   return(res)
   
 }
@@ -30,28 +31,12 @@ is.agg.member <- function(id, t=Sys.Date(), agg){
   
   # input checks:
   check.char(x=id, min.len=0)
-  check.date(x=t, na.ok=FALSE)
+  check.date(x=t, min.len=0, na.ok=FALSE)
   if(length(id)>1L & length(t)>1L) check.lengths(x=id, y=t)
   
-  if(length(id)>0L){
-    
-    # match by time intervals:
-    res <- data.table::foverlaps(
-      x=data.table::data.table("country"=id, "from"=as.Date(t), "to"=as.Date(t)),
-      y=agg,
-      by.x=c("country","from","to"),
-      by.y=c("country","from","to"),
-      type="within")
-    
-  }else{
-    
-    # empty data.table:
-    res <- data.table::data.table("from"=character())
-    
-  }
-  
-  # logical vector without names:
-  res <- as.logical(!is.na(res$from))
+  # transform non-matches of non-equi join into logical vector:
+  res <- agg[data.table("country"=id, "time"=t), on=c("country", "from<=time", "to>=time")]
+  res <- as.logical(!is.na(res$code))
   return(res)
   
 }

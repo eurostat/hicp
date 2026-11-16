@@ -2,10 +2,10 @@
 
 \alias{is.coicop}
 \alias{is.bundle}
-\alias{is.spec.agg}
+\alias{is.special.agg}
 \alias{label}
 \alias{level}
-\alias{spec.agg}
+\alias{special.agg}
 \alias{coicop}
 
 \title{COICOP codes and special aggregates}
@@ -16,17 +16,17 @@
 Valid COICOP codes can be flagged by \code{is.coicop()}.
 The function \code{level()} returns their level (e.g. 2-digit division or 5-digit subclass level). 
 
-For HICP data, special aggregates like food or energy have their own codes, which can be flagged by \code{is.spec.agg()}.
-The function \code{spec.agg()} provides the composition of special aggregates.
+For HICP data, special aggregates like food or energy have their own codes, which can be flagged by \code{is.special.agg()}.
+The function \code{special.agg()} provides the composition of special aggregates, except for administered prices, whose definitions are updated annually.
 
-The function \code{label()} translates the codes into their descriptions.
+The function \code{label()} returns the labels of all valid codes.
 }
 
 \usage{
-# flag COICOP, bundle and special aggregate codes:
+# flag valid COICOP, bundle and special aggregate codes:
 is.coicop(id, settings=list())
 is.bundle(id, settings=list())
-is.spec.agg(id, settings=list())
+is.special.agg(id, settings=list())
 
 # derive the level of COICOP codes:
 level(id, settings=list())
@@ -34,14 +34,15 @@ level(id, settings=list())
 # label codes:
 label(id, settings=list())
 
-# get the composition of a special aggregate:
-spec.agg(id=NULL, settings=list())
+# composition of special aggregates:
+special.agg(id=NULL, settings=list())
 }
 
 \arguments{
   \item{id}{character vector of COICOP or special aggregate codes.}
   \item{settings}{list of control settings to be used. The following settings are supported:
   \itemize{
+    \item \code{chatty} : logical indicating if package-specific warnings and info messages should be printed or not. The default is \code{getOption("hicp.chatty")}.
     \item \code{coicop.version} : character specifying the COICOP version to be used.
     See details for the allowed values. 
     The default is \code{getOption("hicp.coicop.version")}.
@@ -77,10 +78,9 @@ Whether such a prefix is expected can be defined in \code{options("hicp.coicop.p
 }
 
 \value{
-The functions \code{is.coicop()}, \code{is.bundle()} and \code{is.spec.agg()} return a logical vector, the function \code{level()} an integer vector and the function \code{label()} a character vector.
+The functions \code{is.coicop()}, \code{is.bundle()} and \code{is.special.agg()} return a logical vector, the function \code{level()} an integer vector and the function \code{label()} a character vector.
+The function \code{special.agg()} returns a named list with the special aggregate composition.
 All function outputs have the same length as \code{id}.
-
-The function \code{spec.agg()} returns a named list with the special aggregate composition. 
 }
 
 \references{
@@ -93,9 +93,9 @@ European Commission, Eurostat, \emph{Harmonised Index of Consumer Prices (HICP) 
 
 \examples{
 # example codes:
-ids <- c("TOTAL","CP01","CP011","CP99","FOOD","NRG")
+ids <- c("TOTAL","CP01","CP011","CP99","FOOD","NRG","AP")
 ids[is.coicop(ids)] # all-items is no valid COICOP code
-ids[is.spec.agg(ids)]
+ids[is.special.agg(ids)]
 level(ids) # special aggregates without level
 label(ids) 
 }

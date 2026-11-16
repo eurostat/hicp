@@ -12,7 +12,7 @@
 \alias{disaggregate}
 \alias{aggregate.tree}
 
-\title{Index number functions and aggregation}
+\title{Index number formulas and aggregation}
 
 \author{Sebastian Weinand}
 
@@ -50,7 +50,7 @@ aggregate.tree(x, w0, wt, id, formula=laspeyres, settings=list())
   \item{w0, wt}{numeric vector of weights in the base period \code{w0} (e.g., for the Laspeyres index) or current period \code{wt} (e.g., for the Paasche index).}
   \item{id}{character vector of aggregate codes. For \code{aggregate.tree()}, only valid COICOP (bundle) codes are processed.}
   \item{formula}{function or named list of functions specifying the index formula(s) used for aggregation. Each function must return a scalar and have the argument \code{x}. For weighted index formulas, the arguments \code{w0} and/or \code{wt} must be available as well.}
-  \item{agg}{list of user-defined aggregates to be calculated. For \code{disaggregate()}, the list must have names specifying the aggregate from which indices are deducted. Each list element is a vector of codes that can be found in \code{id}. See \code{settings$exact} for further specification of this argument.}
+  \item{agg}{list of user-defined aggregates to be calculated. For \code{disaggregate()}, the list must have names specifying the aggregate from which indices are deducted. Each list element is a vector of codes that can be found in \code{id}. If any code cannot be found in \code{id}, \code{NA} is returned.}
   \item{settings}{list of control settings to be used. The following settings are supported:
   \itemize{
     \item \code{chatty} : logical indicating if package-specific warnings and info messages should be printed or not.
@@ -62,27 +62,23 @@ aggregate.tree(x, w0, wt, id, formula=laspeyres, settings=list())
     The default is \code{getOption("hicp.coicop.prefix")}.
     \item \code{all.items.code} : character specifying the code internally used for the all-items index.
     The default is taken from \code{getOption("hicp.all.items.code")}.
-    \item \code{exact} : logical indicating if the codes in \code{agg} must all be present in \code{id} for aggregation or not.
-    If \code{FALSE}, aggregation is carried out using the codes present in \code{agg}.
-    If \code{TRUE} and some codes cannot be found in \code{id}, \code{NA} is returned.
-    The default is \code{TRUE}.
     \item \code{names} : character of names for the aggregates in \code{agg}.
     If not supplied, the aggregates are numbered.
   }}
 }
 
 \details{
-The bilateral index formulas currently available are intended for the aggregation of (unchained) price relatives \code{x}. The Dutot index is therefore not implemented.
+The bilateral index formulas currently available are intended for the aggregation of (unchained) price relatives \code{x}.
 }
 
 \value{
 The functions \code{jevons()}, \code{carli()}, \code{harmonic()}, \code{laspeyres()}, \code{paasche()}, \code{fisher()}, \code{toernqvist()}, and \code{walsh()} return a single aggregated value.
 
-The functions \code{aggregate()}, \code{disaggregate()} and \code{aggregate.tree()} return a \code{data.table} with the sum of weights \code{w0} and \code{wt} (if supplied) and the computed aggregates for each index formula specified by \code{formula}.
+The functions \code{aggregate()}, \code{disaggregate()} and \code{aggregate.tree()} return a \code{data.table} with the sum of weights \code{w0} and \code{wt} (if supplied) and the index aggregates for each \code{formula}.
 }
 
 \seealso{
-\code{\link{unchain}}, \code{\link{tree}}, \code{\link{spec.agg}}
+\code{\link{unchain}}, \code{\link{tree}}, \code{\link{special.agg}}
 }
 
 \references{
@@ -126,10 +122,6 @@ dtagg[, aggregate(x=laspeyres, w0=w0, id=id,
                   agg=list(c("CP01","CP02","CP03")),
                   settings=list(exact=TRUE))]
 
-# or just use the available ones:
-dtagg[, aggregate(x=laspeyres, w0=w0, id=id, 
-                  agg=list(c("CP01","CP02","CP03")), 
-                  settings=list(exact=FALSE))]
 
 ### EXAMPLE 2: Index aggregation using published HICP data
 \donttest{
@@ -137,27 +129,27 @@ library(restatapi)
 options(restatapi_cores=1)  # set cores for testing on CRAN
 options(hicp.chatty=FALSE)  # suppress package messages and warnings
 
-# import monthly price indices for euro area since 2014:
+# import monthly price indices for euro area:
 dtp <- hicp::data(id="prc_hicp_minr", 
-                  date.range=c("2014-12", NA), 
+                  date.range=c("2019-12", NA), 
                   filters=list(unit="I25", geo="EA"))
-dtp[, "time":=as.Date(paste0(time, "-01"))]
-dtp[, "year":=as.integer(format(time, "\%Y"))]
-setnames(x=dtp, old="values", new="index")
+                  
+# import euro area item weights:
+dtw <- hicp::data(id="prc_hicp_iw", date.range=c("2020",NA), filters=list(geo="EA"))
+dtw[, "year":=as.integer(time)]
+
+# combine data:   
+dtall <- CJ("coicop18"=unique(dtw$coicop18), "time"=unique(dtp$time))
+dtall[dtp, "index":=i.values, on=c("coicop18","time")]
+dtall[, "time":=as.Date(paste0(time, "-01"))]
+dtall[, "year":=year(time)]
+dtall[dtw, "weight":=i.values, on=c("coicop18","year")]   
+dtall <- dtall[year <= year(Sys.Date())-1,] # not necessarily needed
+setcolorder(dtall, c("coicop18","year","time","index","weight"))
+setkeyv(dtall, cols=c("coicop18","time"))
 
 # unchain all indices for aggregation:
-dtp[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
-
-# import euro area item weights since 2014:
-dtw <- hicp::data(id="prc_hicp_iw", 
-                  date.range=c("2014",NA),
-                  filters=list(geo="EA"))
-dtw[, "time":=as.integer(time)]
-setnames(x=dtw, old=c("time","values"), new=c("year","weight"))
-
-# merge price indices and item weights:
-dtall <- merge(x=dtp, y=dtw, by=c("geo","coicop18","year"), all.x=TRUE)
-dtall <- dtall[year <= year(Sys.Date())-1,]
+dtall[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
 
 # derive COICOP tree at lowest possible level:
 dtall[weight>0 & !is.na(dec_ratio),
@@ -168,22 +160,19 @@ dtall[weight>0 & !is.na(dec_ratio),
 dtall[tree==TRUE, sum(weight), by="time"]
 
 # (1) compute all-items HICP in one step using only lowest-level indices:
-hicp.own <- dtall[tree==TRUE,
-                  list("laspey"=laspeyres(x=dec_ratio, w0=weight)),
-                  by="time"]
-setorderv(x=hicp.own, cols="time")
-hicp.own[, "chain_laspey" := chain(x=laspey, t=time, by=12)]
-hicp.own[, "chain_laspey_25" := rebase(x=chain_laspey, t=time, t.ref="2025")]
+dthicp <- dtall[tree==TRUE,
+                list("laspeyres"=laspeyres(x=dec_ratio, w0=weight)),
+                by="time"]
+setorderv(x=dthicp, cols="time")
+dthicp[, "index" := chain(x=laspeyres, t=time, by=12)]
+dthicp[, "index25" := rebase(x=index, t=time, t.ref="2025")]
 
 # (2) compute all-items HICP gradually through all higher-levels:
-hicp.own.all <- dtall[weight>0 & !is.na(dec_ratio), 
-                      aggregate.tree(x=dec_ratio, w0=weight, id=coicop18), 
-                      by="time"]
-setorderv(x=hicp.own.all, cols="time")
-hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="id"]
-hicp.own.all[, "chain_laspey_25" := rebase(x=chain_laspey, t=time, t.ref="2025"), by="id"]
-
-# (3) compare all-items HICP from direct and gradual aggregation:
-all(abs(hicp.own.all[id=="TOTAL", chain_laspey_25]-hicp.own$chain_laspey_25)<0.1)
-# no differences -> consistent in aggregation
+dthicp.all <- dtall[level(coicop18)<5L,
+                    aggregate.tree(x=dec_ratio, w0=weight, id=coicop18),
+                    by="time"]
+setorderv(x=dthicp.all, cols="time")
+dthicp.all[, "index" := chain(x=laspeyres, t=time, by=12), by="id"]
+dthicp.all[, "index25" := rebase(x=index, t=time, t.ref="2025"), by="id"]
+# -> all-items HICP identical to the one in hicp.own due to consistency in aggregation
 }}

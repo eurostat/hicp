@@ -2,7 +2,7 @@
 title: "Introduction to the `hicp`-package"
 author: "Sebastian Weinand"
 #date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.Date(),'%d %B %Y')`"
-date: "February 2026"
+date: "November 2026"
 output: 
   rmarkdown::html_vignette:
     toc: true
@@ -156,13 +156,13 @@ tree(id=ids, w=c(0.2,0.08,0.12,0.05,0.01))
 
 ## Special aggregates
 
-For the HICP, various special aggregates like food and energy are calculated. Each special aggregate is composed of a selection of COICOP codes. This composition is fix over time but depends on the COICOP version. The function `spec.agg()` provides the definitions of all HICP special aggregates, while the function `is.spec.agg()` validates the codes of special aggregates.
+For the HICP, various special aggregates like food and energy are calculated. Each special aggregate is composed of a selection of COICOP codes. This composition is fix over time but depends on the COICOP version. The function `special.agg()` provides the definitions of all HICP special aggregates, while the function `is.special.agg()` validates the codes of special aggregates.
 ```{r warning=FALSE}
 # validate codes:
-is.spec.agg(id=c("TOTAL","CP01","FOOD","NRG"))
+is.special.agg(id=c("TOTAL","CP01","FOOD","NRG","AP"))
 
 # get compositions of non-processed food and energy:
-spec.agg(id=c("FOOD_NP","NRG"))
+special.agg(id=c("FOOD_NP","NRG"))
 ```
 
 
@@ -190,20 +190,23 @@ dtp[, "time":=as.Date(paste0(time, "-01"))]
 dtp[, "year":=as.integer(format(time, "%Y"))]
 setnames(x=dtp, old="values", new="index")
 ```
-Second, the price indices are unchained separately for each ECOICOP using the function `unchain()`.
-```{r warning=FALSE}
-# unchain price indices:
-dtp[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
-```
-Next, the price indices `prc` and item weights `inw` are merged into one data set.
+Next, the price indices `dtp` and item weights `dtw` are merged into one data set.
 ```{r warning=FALSE}
 # manipulate item weights:
 dtw <- item.weights[geo=="EA", list(coicop18,geo,time,values)]
 dtw[, "time":=as.integer(time)]
 setnames(x=dtw, old=c("time","values"), new=c("year","weight"))
 
-# merge price indices and item weights:
-dtall <- merge(x=dtp, y=dtw, by=c("geo","coicop18","year"), all.x=TRUE)
+# combine price indices and item weights:
+dtall <- CJ("coicop18"=unique(dtw$coicop18), "time"=unique(dtp$time))
+dtall[, "year":=year(time)]
+dtall[dtp, "index":=i.index, on=c("coicop18","time")]
+dtall[dtw, "weight":=i.weight, on=c("coicop18","year")]
+```
+The price indices are unchained separately for each ECOICOP using the function `unchain()`.
+```{r warning=FALSE}
+# unchain price indices:
+dtall[, "dec_ratio" := unchain(x=index, t=time), by="coicop18"]
 ```
 For aggregating the unchained price indices in one step into the all-items index, the lowest level of the COICOP tree must be derived. Based on the derived COICOP tree, the unchained price indices are aggregated using the function `laspeyres()`, chained into a long-term index series using the function `chain()`, and finally re-referenced to the index reference period 2025 using the function `rebase()`. The resulting index is plotted below.
 ```{r warning=FALSE, fig.width=7, fig.align="center"}
@@ -219,13 +222,13 @@ hicp.own <- dtall[tree==TRUE,
 setorderv(x=hicp.own, cols="time")
 
 # chain the resulting index:
-hicp.own[, "chain_laspey" := chain(x=laspey, t=time, by=12)]
+hicp.own[, "index" := chain(x=laspey, t=time, by=12)]
 
 # rebase the index to 2025:
-hicp.own[, "chain_laspey_25" := rebase(x=chain_laspey, t=time, t.ref="2025")]
+hicp.own[, "index25" := rebase(x=index, t=time, t.ref="2025")]
 
 # plot all-items index:
-plot(chain_laspey_25~time, data=hicp.own, type="l", xlab="Time", ylab="Index")
+plot(index25~time, data=hicp.own, type="l", xlab="Time", ylab="Index")
 title("Euro area HICP")
 abline(h=0, lty="dashed")
 ```
@@ -233,18 +236,18 @@ abline(h=0, lty="dashed")
 Similarly, the (unchained) price indices are aggregated gradually following the COICOP tree, which produces in addition to the all-items index all lower-level indices. 
 ```{r warning=FALSE}
 # compute all-items HICP gradually from bottom to top:
-hicp.own.all <- dtall[weight>0 & !is.na(dec_ratio),
-                      aggregate.tree(x=dec_ratio, w0=weight, id=coicop18, formula=laspeyres), 
+hicp.own.all <- dtall[, aggregate.tree(x=dec_ratio, w0=weight, id=coicop18, formula=laspeyres), 
                       by="time"]
 setorderv(x=hicp.own.all, cols="time")
-hicp.own.all[, "chain_laspey" := chain(x=laspeyres, t=time, by=12), by="id"]
-hicp.own.all[, "chain_laspey_25" := rebase(x=chain_laspey, t=time, t.ref="2025"), by="id"]
+hicp.own.all[, "index" := chain(x=laspeyres, t=time, by=12), by="id"]
+hicp.own.all[, "index25" := rebase(x=index, t=time, t.ref="2025"), by="id"]
 ```
 
 A comparison to the all-items index that has been computed in one step shows no differences, which highlights the consistency in aggregation of the Laspeyres-type index.
 ```{r warning=FALSE}
 # all-items HICP from direct and gradual aggregation identical:
-all(abs(hicp.own.all[id=="TOTAL", chain_laspey_25]-hicp.own$chain_laspey_25)<0.1)
+dtcomp <- merge(x=hicp.own.all[id=="TOTAL", ], y=hicp.own, by="time", all=TRUE)
+all(dtcomp[, abs(index25.x-index25.y)<0.1], na.rm=TRUE)
 ```
 
 User-defined aggregates can be easily calculated with the functions `aggregate()` and `disaggregate()`. This is particularly useful for the calculation of the HICP special aggregates like food, energy or the overall index excluding the two as shown below.
@@ -252,15 +255,15 @@ User-defined aggregates can be easily calculated with the functions `aggregate()
 # compute food and energy by aggregation:
 dtall[time>="2019-12-01",
       aggregate(x=dec_ratio, w0=weight, id=coicop18,
-                agg=spec.agg(id=c("FOOD","NRG")),
-                settings=list(exact=FALSE, names=c("FOOD","NRG"))), 
+                agg=special.agg(id=c("FOOD","NRG")),
+                settings=list(names=c("FOOD","NRG"))), 
       by="time"]
 
 # compute overall index excluding food and energy by disaggregation:
 dtall[time>="2019-12-01",
       disaggregate(x=dec_ratio, w0=weight, id=coicop18,
                    agg=list("TOTAL"=c("FOOD","NRG")),
-                   settings=list(names="TOT_X_FOOD_NRG")), 
+                   settings=list(names="TOT_X_NRG_FOOD")), 
       by="time"]
 ```
 The resulting aggregates can finally be chained and rebased as shown before.
@@ -269,22 +272,22 @@ User-defined functions can be passed to `aggregate()` as well, which allows aggr
 
 ## Rates of change and contributions
 
-Monthly change rates are computed by dividing the HICP index in the current period by the index one month before. Annual change rates are derived by comparing the index in the current month to the index in the same month one year before. Both rates can be easily derived using the function `rates()`. Contributions of the price changes of individual items to the overall annual rate of change can be computed by the Ribe method as implemented in the function `contrib()`.
+Monthly change rates are computed by dividing the HICP index in the current period by the index one month before. Annual change rates are derived by comparing the index in the current month to the index in the same month one year before. Both rates can be easily derived using the function `rates()`. Contributions of the price changes of individual items to the overall annual rate of change can be computed by the Ribe method as implemented in the function `contributions()`.
 ```{r warning=FALSE, fig.width=7, fig.height=4, fig.align="center"}
 # compute annual rates of change for the all-items HICP:
-dtall[, "ar" := rates(x=index, t=time, type="year"), by=c("geo","coicop18")]
+dtall[, "ar" := rates(x=index, t=time, type="year"), by="coicop18"]
 
 # add all-items HICP:
-dtall <- merge(x=dtall,
-               y=dtall[coicop18=="TOTAL", list(geo,time,index,weight)],
-               by=c("geo","time"), all.x=TRUE, suffixes=c("","_all"))
+dtall[dtall[coicop18=="TOTAL",], 
+      c("index_all","weight_all") := list(i.index,i.weight), 
+      on="time"]
 
 # Ribe decomposition:
-dtall[, "ribe" := contrib(x=index, w=weight, t=time, 
-                          x.all=index_all, w.all=weight_all, type="year"),
+dtall[, "ribe" := contributions(x=index, w=weight, t=time,
+                                xagg=index_all, wagg=weight_all, type="year"),
       by="coicop18"]
 
-# annual change rates and contribtuions over time:
+# annual change rates and contributions over time:
 plot(ar~time, data=dtall[coicop18=="TOTAL",], type="l", xlab="Time", ylab="", ylim=c(-1,13))
 lines(ribe~time, data=dtall[coicop18=="CP011"], col="red")
 title("Contributions of food to overall inflation")

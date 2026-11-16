@@ -30,15 +30,16 @@ expect_true(is.bundle("08X", settings=list(coicop.version="ecoicop1.hicp")))
 expect_true(is.bundle("CP08X", settings=list(coicop.version="ecoicop1.hicp", coicop.prefix="CP")))
 
 
-# is.spec.agg() -----------------------------------------------------------
+# is.special.agg() -----------------------------------------------------------
 
 
-expect_equal(is.spec.agg(character()), logical())
-expect_false(is.spec.agg(NA_character_))
-expect_false(is.spec.agg("TOTAL"))
-expect_all_true(is.spec.agg(names(spec.agg(id=NULL))))
-expect_all_false(is.spec.agg(names(spec.agg(id=NULL)), settings=list(coicop.version="ecoicop2")))
-expect_all_false(is.spec.agg(c("food","01","CP01")))
+expect_equal(is.special.agg(character()), logical())
+expect_false(is.special.agg(NA_character_))
+expect_false(is.special.agg("TOTAL"))
+expect_all_true(is.special.agg(names(special.agg(id=NULL))))
+expect_true(is.special.agg("AP"))
+expect_all_false(is.special.agg(names(special.agg(id=NULL)), settings=list(coicop.version="ecoicop2")))
+expect_all_false(is.special.agg(c("food","01","CP01")))
 
 
 # level() -----------------------------------------------------------------
@@ -64,22 +65,19 @@ expect_equal(label("TOTAL", settings=list(all.items.code=c("test"="TOTAL"))), "t
 expect_all_true(!is.na(label(c("01","02","AP","FOOD"))))
 
 
-# spec.agg() --------------------------------------------------------------
+# special.agg() --------------------------------------------------------------
 
 
-expect_length(spec.agg(character()), 0L)
-expect_type(spec.agg(character()), "list")
-expect_named(spec.agg(character()), character())
-expect_length(spec.agg(NA_character_), 0L)
-expect_type(spec.agg(NA_character_), "list")
-expect_named(spec.agg(NA_character_), character())
-expect_length(spec.agg("FOOD"), 1L)
-expect_type(spec.agg("FOOD"), "list")
-expect_named(spec.agg("FOOD"), "FOOD")
-expect_all_true(startsWith(spec.agg("FOOD", settings=list(coicop.prefix="CP"))[[1]], "CP"))
-expect_length(spec.agg("FOOD", settings=list(coicop.version="ecoicop2")), 0L)
-expect_length(spec.agg(c("FOOD","NRG","FOOD","test")), 2L)
-expect_named(spec.agg(c("FOOD","NRG","FOOD","test")), c("FOOD","NRG"))
+expect_length(special.agg(character()), 0L)
+expect_type(special.agg(character()), "list")
+expect_named(special.agg(character()), character())
+expect_length(special.agg("FOOD"), 1L)
+expect_type(special.agg("FOOD"), "list")
+expect_named(special.agg("FOOD"), "FOOD")
+expect_all_true(startsWith(special.agg("FOOD", settings=list(coicop.prefix="CP"))[[1]], "CP"))
+expect_equal(special.agg("FOOD", settings=list(coicop.version="ecoicop2")), list("FOOD"=NULL))
+expect_length(special.agg(c("FOOD","test","NRG","FOOD",NA)), 5L)
+expect_named(special.agg(c("FOOD","test","NRG","FOOD",NA)), c("FOOD","test","NRG","FOOD",NA))
 
 
 # END

@@ -2,12 +2,20 @@
 
 # Title:    Internal package data
 # Author:   Sebastian Weinand
-# Date:     31 January 2026
+# Date:     18 October 2026
 
 # load packages:
 library(xml2)
 library(openxlsx)
 library(data.table)
+
+
+# Labels ------------------------------------------------------------------
+
+
+# get labels for ECOICOP ver. 1 and 2 (HICP) as backup:
+dtlabs1 <- hicp::datafilters(id="prc_hicp_inw")
+dtlabs2 <- hicp::datafilters(id="prc_hicp_iw")
 
 
 # COICOP codes ------------------------------------------------------------
@@ -31,7 +39,7 @@ for(j in seq_along(out1)){
   out1[[j]] <- c(
     "id"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/dc:identifier")),
     "name"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/skos:altLabel[@xml:lang='en']")))
-  Sys.sleep(runif(n=1, min=0.1, max=0.3))
+  Sys.sleep(runif(n=1, min=0.2, max=0.3))
 }
 dtecoicop1 <- data.table(do.call("rbind", out1))
 Sys.sleep(time=5) # wait 5 seconds
@@ -50,7 +58,7 @@ if(length(add2)>0L){
     out2[[j]] <- c(
       "id"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/dc:identifier")),
       "name"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/skos:altLabel[@xml:lang='en']")))
-    Sys.sleep(runif(n=1, min=0.1, max=0.3))
+    Sys.sleep(runif(n=1, min=0.2, max=0.3))
   }
   dtecoicop1.hicp <- rbind(dtecoicop1.hicp, do.call("rbind", out2))
 }
@@ -82,7 +90,7 @@ for(j in seq_along(out5)){
   out5[[j]] <- c(
     "id"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/dc:identifier")),
     "name"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/skos:altLabel[@xml:lang='en']")))
-  Sys.sleep(runif(n=1, min=0.1, max=0.3))
+  Sys.sleep(runif(n=1, min=0.2, max=0.3))
 }
 dtecoicop2 <- data.table(do.call("rbind", out5))
 Sys.sleep(time=5) # wait 5 seconds
@@ -104,7 +112,7 @@ if(length(add6)>0L){
     out6[[j]] <- c(
       "id"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/dc:identifier")),
       "name"=xml_text(xml_find_all(x=doctmp, xpath="//rdf:Description/skos:altLabel[@xml:lang='en']")))
-    Sys.sleep(runif(n=1, min=0.1, max=0.3))
+    Sys.sleep(runif(n=1, min=0.2, max=0.3))
   }
   dtecoicop2.hicp <- rbind(dtecoicop2.hicp, do.call("rbind", out6))
 }
@@ -148,9 +156,8 @@ ecoicop1.bundle.defs <- list(
 )
 
 # get labels:
-dtbdl1nm <- hicp::datafilters(id="prc_hicp_inw")
-dtbdl1nm <- dtbdl1nm[concept=="coicop" & grepl(pattern="^CP.*[[:punct:]]", code), 
-                     list("id"=gsub(pattern="^CP", replacement="", x=code), name)]
+dtbdl1nm <- dtlabs1[concept=="coicop" & grepl(pattern="^CP.*[[:punct:]]", code),
+                    list("id"=gsub(pattern="^CP", replacement="", x=code), name)]
 nm <- dtbdl1nm$name[match(x=names(ecoicop1.bundle.defs), table=dtbdl1nm$id)]
 dict.bundles <- data.table(
   "version" = "ecoicop1.hicp",
@@ -174,7 +181,7 @@ for(j in seq_along(aggurls)){
   doctmp <- read_xml(x=aggurls[j])
   aggid[j] <- xml_text(xml_find_all(doctmp, xpath="//skos:notation"))
   aggnm[j] <- xml_text(xml_find_all(doctmp, xpath="//skos:prefLabel[@xml:lang='en']"))
-  Sys.sleep(runif(n=1, min=0.1, max=0.3))
+  Sys.sleep(runif(n=1, min=0.2, max=0.3))
   
 }
 
@@ -191,10 +198,16 @@ for(j in seq_along(aggurls)){
   agg1nm[j] <- sapply(X=strsplit(x=idtop, split="/", fixed=TRUE), FUN=function(z) z[length(z)])
   ids <- xml_attr(xml_find_all(doctmp, xpath="//rdf:Description/ns2:targetConcept"), attr="resource")
   agg1[[j]] <- sort(sapply(X=strsplit(x=ids, split="/", fixed=TRUE), FUN=function(z) z[length(z)]))
-  Sys.sleep(runif(n=1, min=0.1, max=0.3))
+  Sys.sleep(runif(n=1, min=0.2, max=0.3))
   
 }
 names(agg1) <- agg1nm
+
+# update labels:
+dict.spec.aggs1 <- data.table("id"=aggid, "name"=aggnm, "def"=agg1[match(x=aggid, table=names(agg1))])
+dict.spec.aggs1[dtlabs1, "name2" := i.name, on=c("id"="code")]
+dict.spec.aggs1[, "name":=ifelse(test=!is.na(name2) & name!=name2, yes=name2, no=name)]
+dict.spec.aggs1[, "name2":=NULL]
 
 # get composition in ECOICOP ver. 2:
 doc <- read_xml("http://data.europa.eu/x29/ecoicop_aggregates/SA_ECOICOP2")
@@ -209,19 +222,22 @@ for(j in seq_along(aggurls)){
   agg2nm[j] <- sapply(X=strsplit(x=idtop, split="/", fixed=TRUE), FUN=function(z) z[length(z)])
   ids <- xml_attr(xml_find_all(doctmp, xpath="//rdf:Description/ns2:targetConcept"), attr="resource")
   agg2[[j]] <- sort(sapply(X=strsplit(x=ids, split="/", fixed=TRUE), FUN=function(z) z[length(z)]))
-  Sys.sleep(runif(n=1, min=0.1, max=0.3))
+  Sys.sleep(runif(n=1, min=0.2, max=0.3))
   
 }
 names(agg2) <- agg2nm
 
+# update labels:
+dict.spec.aggs2 <- data.table("id"=aggid, "name"=aggnm, "def"=agg2[match(x=aggid, table=names(agg2))])
+dict.spec.aggs2[dtlabs2, "name2" := i.name, on=c("id"="code")]
+dict.spec.aggs2[, "name":=ifelse(test=!is.na(name2) & name!=name2, yes=name2, no=name)]
+dict.spec.aggs2[, "name2":=NULL]
+
+# manual correction until Showvoc-xml updated:
+dict.spec.aggs2[id=="TOT_X_ALC_TBC", "def" := list(sort(c("02200",def[[1]])))]
+
 # combine:
-dict.spec.aggs <- rbindlist(
-  l=list(
-    "ecoicop1.hicp"=data.table("id"=aggid, "name"=aggnm, "def"=agg1[match(x=aggid, table=names(agg1))]),
-    "ecoicop2.hicp"=data.table("id"=aggid, "name"=aggnm, "def"=agg2[match(x=aggid, table=names(agg2))])),
-  use.names=TRUE, 
-  fill=TRUE, 
-  idcol="version")
+dict.spec.aggs <- rbindlist(l=list("ecoicop1.hicp"=dict.spec.aggs1, "ecoicop2.hicp"=dict.spec.aggs2), idcol="version")
 setcolorder(x=dict.spec.aggs, neworder=c("version","id","name","def"))
 setkeyv(x=dict.spec.aggs, cols=c("version","id"))
 
@@ -254,12 +270,10 @@ setkeyv(x=dict.spec.aggs, cols=c("version","id"))
 
 
 # administered prices for ECOICOP ver. 1 (HICP):
-dtap1 <- hicp::datafilters(id="prc_hicp_inw")
-dtap1 <- dtap1[concept=="coicop" & grepl(pattern="AP", x=code), list("id"=code, name)]
+dtap1 <- dtlabs1[concept=="coicop" & grepl(pattern="AP", x=code), list("id"=code, name)]
 
 # administered prices for ECOICOP ver. 2 (HICP):
-dtap2 <- hicp::datafilters(id="prc_hicp_iw")
-dtap2 <- dtap2[concept=="coicop18" & grepl(pattern="AP", x=code), list("id"=code, name)]
+dtap2 <- dtlabs2[concept=="coicop18" & grepl(pattern="AP", x=code), list("id"=code, name)]
 
 # combine:
 dict.ap <- rbindlist(l=list("ecoicop1.hicp"=dtap1, "ecoicop2.hicp"=dtap2), idcol="version") 
@@ -378,12 +392,18 @@ dict.country.aggs <- list(
 # Data export -------------------------------------------------------------
 
 
+# define global product dictionary:
+dict.prods <- data.table::rbindlist(
+  l=list("COICOP"=dict.coicop,
+         "BDL"=dict.bundles,
+         "SA"=dict.spec.aggs,
+         "AP"=dict.ap),  
+  use.names=TRUE, fill=TRUE, idcol="concept")
+setkeyv(x=dict.prods, cols=c("concept","version","id"))
+
 # write to internal data:
 usethis::use_data(
-  dict.coicop, 
-  dict.bundles, 
-  dict.spec.aggs, 
-  dict.ap,
+  dict.prods,
   dict.countries, 
   dict.country.aggs, 
   overwrite=TRUE, 

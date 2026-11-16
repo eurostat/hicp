@@ -12,21 +12,113 @@ options(hicp.all.items.code="TOTAL")
 
 expect_error(dictionary(x="COICOP", which="CODE", settings=list(coicop.version="test")))
 
-settings <- list(
-  "coicop.version"="ecoicop1.hicp", 
-  "coicop.prefix"=getOption("hicp.coicop.prefix"))
+# ECOICOP v1:
+settings <- list("coicop.version"="ecoicop1.hicp", "coicop.prefix"="CP")
 
-expect_type(dictionary(x="COICOP", which="CODE", settings=settings), "character")
-expect_type(dictionary(x="COICOP", which="LABEL", settings=settings), "character")
-expect_type(dictionary(x="COICOP", which="DEF", settings=settings), "list")
+d <- dictionary(x="COICOP", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0)
+expect_all_true(startsWith(d, prefix="CP"))
 
-expect_type(dictionary(x="BDL", which="CODE", settings=settings), "character")
-expect_type(dictionary(x="BDL", which="LABEL", settings=settings), "character")
-expect_type(dictionary(x="BDL", which="DEF", settings=settings), "list")
+d <- dictionary(x="COICOP", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0)
 
-expect_type(dictionary(x="SA", which="CODE", settings=settings), "character")
-expect_type(dictionary(x="SA", which="LABEL", settings=settings), "character")
-expect_type(dictionary(x="SA", which="DEF", settings=settings), "list")
+d <- dictionary(x="COICOP", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 0L)
+
+d <- dictionary(x="BDL", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_length(d, 18L)
+expect_all_true(startsWith(d, prefix="CP"))
+
+d <- dictionary(x="BDL", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_length(d, 18L)
+
+d <- dictionary(x="BDL", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 18L)
+expect_all_true(startsWith(d[[1]], prefix="CP"))
+
+d <- dictionary(x="AP", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0L)
+
+d <- dictionary(x="AP", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0L)
+
+d <- dictionary(x="AP", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 0L)
+
+d <- dictionary(x="SA", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_length(d, 38L)
+
+d <- dictionary(x="SA", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_length(d, 38L)
+
+d <- dictionary(x="SA", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 38L)
+expect_all_true(startsWith(d[[1]], prefix="CP"))
+
+# ECOICOP v2:
+settings <- list("coicop.version"="ecoicop2.hicp", "coicop.prefix"="CP")
+
+d <- dictionary(x="COICOP", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0)
+expect_all_true(startsWith(d, prefix="CP"))
+
+d <- dictionary(x="COICOP", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0)
+
+d <- dictionary(x="COICOP", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 0L)
+
+d <- dictionary(x="BDL", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_length(d, 0L)
+
+d <- dictionary(x="BDL", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_length(d, 0L)
+
+d <- dictionary(x="BDL", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 0L)
+
+d <- dictionary(x="AP", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0L)
+
+d <- dictionary(x="AP", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_gt(length(d), 0L)
+
+d <- dictionary(x="AP", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 0L)
+
+d <- dictionary(x="SA", which="CODE", settings=settings)
+expect_type(d, "character")
+expect_length(d, 38L)
+
+d <- dictionary(x="SA", which="LABEL", settings=settings)
+expect_type(d, "character")
+expect_length(d, 38L)
+
+d <- dictionary(x="SA", which="DEF", settings=settings)
+expect_type(d, "list")
+expect_length(d, 38L)
+expect_all_true(startsWith(d[[1]], prefix="CP"))
 
 
 # unbundle() --------------------------------------------------------------
